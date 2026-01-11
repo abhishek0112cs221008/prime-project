@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Prime Project - Cart</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <nav class="nav">
+        <a href="index.html" class="nav-brand">Prime Project</a>
+        <div class="nav-links">
+            <a href="index.html">Projects</a>
+            <a href="cart.html" style="color: var(--accent-color)">Cart</a>
+            <a href="orders.html">Orders</a>
+            <span id="auth-links"></span>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">◐</button>
+    </nav>
+
+    <div class="container">
+        <h1>Review your cart.</h1>
+        <p style="text-align: center; margin-bottom: 40px;">Instant access to downloaded files.</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Subtotal</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="cart-list"></tbody>
+        </table>
+
+        <div style="margin-top: 40px; text-align: right; border-top: 1px solid var(--border-color); padding-top: 20px;">
+            <div style="font-size: 24px; font-weight: 600; margin-bottom: 20px;">
+                Total: <span id="cart-total">₹0</span>
+            </div>
+            <button onclick="checkout()" style="width: 200px;">Check Out</button>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <p>Copyright © 2026 Prime Project Inc. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Use</a>
+                <a href="#">Sales and Refunds</a>
+                <a href="#">Legal</a>
+                <a href="#">Site Map</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Checkout Modal moved before scripts to prevent null reference error -->
+    <div id="checkout-modal"
+        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0); z-index:1000; align-items:flex-end; justify-content:center; backdrop-filter: blur(0px); transition: background 0.4s cubic-bezier(0.32, 0, 0.67, 0), backdrop-filter 0.4s;">
+        <div id="checkout-sheet"
+            style="background:var(--card-bg); width:100%; max-width:500px; padding:30px; border-radius:20px 20px 0 0; position:relative; border-top: 1px solid var(--border-color); transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); box-shadow: 0 -10px 40px rgba(0,0,0,0.3);">
+
+            <div
+                style="width: 40px; height: 5px; background: var(--text-secondary); border-radius: 3px; margin: -10px auto 20px; opacity: 0.2;">
+            </div>
+
+            <h2 style="margin-top:0;">Secure Checkout</h2>
+            <p style="margin-bottom:20px; font-size:14px; color:var(--text-secondary);">Scan QR to Pay, then enter UTR.
+            </p>
+
+            <div style="margin-bottom:20px; text-align:center;">
+                <img src="images/payment_qr.png"
+                    style="width:150px; height:150px; border-radius:10px; border:1px solid var(--border-color);">
+            </div>
+
+            <!-- Shipping Address Removed (Digital Product) -->
+            <!-- <div style="margin-bottom:15px;" ... > -->
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; font-size:13px;">Payment Reference (UTR)</label>
+                <input id="payment-utr" placeholder="UPI12345678"
+                    style="width:100%; padding:12px; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:10px;">
+            </div>
+
+            <div style="margin-bottom:25px;">
+                <label style="display:block; margin-bottom:5px; font-size:13px;">Discount Code (Optional)</label>
+                <input id="discount-code" placeholder="SAVE10"
+                    style="width:100%; padding:12px; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:10px;">
+            </div>
+
+            <div style="display:flex; gap:10px;">
+                <button onclick="closeCheckout()"
+                    style="flex:1; background:transparent; border:1px solid var(--border-color); color:var(--text-color); border-radius:10px; padding: 12px;">Cancel</button>
+                <button onclick="confirmCheckout()" style="flex:2; border-radius:10px; padding: 12px;">Pay & Place
+                    Order</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        if (!requireLogin()) throw new Error("Redirecting");
+
+        async function loadCart() {
+            try {
+                const items = await Api.get('/cart');
+                console.log("DEBUG: Cart Data Received:", items);
+
+                const container = document.getElementById('cart-list');
+                const totalEl = document.getElementById('cart-total');
+
+                if (!items || items.length === 0) {
+                    container.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 40px;">Your cart is empty. <a href="index.html">Browse Projects</a></td></tr>';
+                    totalEl.innerText = '₹0';
+                    return;
+                }
+
+                let total = 0;
+                let html = '';
+
+                items.forEach(item => {
+                    // Safety checks
+                    if (!item.product) {
+                        console.error("Cart Item missing product data:", item);
+                        return;
+                    }
+
+                    const p = item.product;
+                    const price = p.price || 0;
+                    const quantity = item.quantity || 1;
+                    const subtotal = price * quantity;
+                    const img = p.imageUrl || 'https://via.placeholder.com/50?text=No+Img';
+                    const name = p.name || 'Unnamed Product';
+
+                    total += subtotal;
+
+                    html += `
+                        <tr>
+                            <td>
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                     <img src="${img}" style="width:50px; height:50px; object-fit:contain; border-radius:4px;">
+                                     <b>${name}</b>
+                                </div>
+                            </td>
+                            <td>₹${price.toLocaleString('en-IN')}</td>
+                            <td>${quantity}</td>
+                            <td>₹${subtotal.toLocaleString('en-IN')}</td>
+                            <td style="text-align:right;">
+                                <button class="danger" style="width: auto; padding: 8px 12px; font-size: 13px;" onclick="removeItem(${item.id})">Remove</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                if (html === '') {
+                    container.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 40px; color: red;">Error: Items loaded but had missing details. Check console.</td></tr>';
+                } else {
+                    container.innerHTML = html;
+                }
+
+                totalEl.innerText = '₹' + total.toLocaleString('en-IN');
+
+            } catch (err) {
+                console.error("CRITICAL ERROR IN loadCart:", err);
+                document.getElementById('cart-list').innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 40px; color: red;">Failed to load cart. ${err.message}</td></tr>`;
+            }
+        }
+
+        async function removeItem(id) {
+            try {
+                await Api.delete(`/cart/${id}`);
+                loadCart();
+            } catch (e) { }
+        }
+
+        async function checkout() {
+            const modal = document.getElementById('checkout-modal');
+            modal.style.display = 'flex';
+            // Trigger animation
+            requestAnimationFrame(() => {
+                modal.style.background = 'rgba(0,0,0,0.6)';
+                modal.style.backdropFilter = 'blur(8px)';
+                document.getElementById('checkout-sheet').style.transform = 'translateY(0)';
+            });
+        }
+
+        function closeCheckout() {
+            const modal = document.getElementById('checkout-modal');
+            modal.style.background = 'rgba(0,0,0,0)';
+            modal.style.backdropFilter = 'blur(0px)';
+            const sheet = document.getElementById('checkout-sheet');
+            if (sheet) sheet.style.transform = 'translateY(100%)';
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 400);
+        }
+
+        // Close on click outside
+        document.getElementById('checkout-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('checkout-modal')) closeCheckout();
+        });
+
+        async function confirmCheckout() {
+            // const address = document.getElementById('shipping-address').value;
+            const utr = document.getElementById('payment-utr').value;
+            const code = document.getElementById('discount-code').value;
+
+            if (!utr) {
+                alert("Please enter the Payment Reference (UTR).");
+                return;
+            }
+
+            try {
+                const body = {
+                    shippingAddress: "Digital Delivery",
+                    utr: utr,
+                    discountCode: code
+                };
+
+                const res = await Api.post('/orders', body);
+                if (res) {
+                    alert('Order placed successfully! Payment ID: ' + res.paymentId);
+                    window.location.href = 'orders.html';
+                }
+            } catch (e) {
+                alert("Checkout failed: " + e.message);
+            }
+        }
+
+        loadCart().catch(e => {
+            console.error("Critical error loading cart:", e);
+            document.getElementById('cart-list').innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 40px; color: red;">Failed to load cart. ${e.message}</td></tr>`;
+        });
+    </script>
+
+    <!-- Checkout Modal -->
+    <div id="checkout-modal"
+        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0); z-index:1000; align-items:flex-end; justify-content:center; backdrop-filter: blur(0px); transition: background 0.4s cubic-bezier(0.32, 0, 0.67, 0), backdrop-filter 0.4s;">
+        <div id="checkout-sheet"
+            style="background:var(--card-bg); width:100%; max-width:500px; padding:30px; border-radius:20px 20px 0 0; position:relative; border-top: 1px solid var(--border-color); transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); box-shadow: 0 -10px 40px rgba(0,0,0,0.3);">
+
+            <div
+                style="width: 40px; height: 5px; background: var(--text-secondary); border-radius: 3px; margin: -10px auto 20px; opacity: 0.2;">
+            </div>
+
+            <h2 style="margin-top:0;">Secure Checkout</h2>
+            <p style="margin-bottom:20px; font-size:14px; color:var(--text-secondary);">Enter your shipping and payment
+                details.</p>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; font-size:13px;">Shipping Address</label>
+                <input id="shipping-address" placeholder="123 Main St, City, Country"
+                    style="width:100%; padding:12px; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:10px;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; font-size:13px;">Payment Reference (UTR)</label>
+                <input id="payment-utr" placeholder="UPI12345678"
+                    style="width:100%; padding:12px; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:10px;">
+            </div>
+
+            <div style="margin-bottom:25px;">
+                <label style="display:block; margin-bottom:5px; font-size:13px;">Discount Code (Optional)</label>
+                <input id="discount-code" placeholder="SAVE10"
+                    style="width:100%; padding:12px; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:10px;">
+            </div>
+
+            <div style="display:flex; gap:10px;">
+                <button onclick="closeCheckout()"
+                    style="flex:1; background:transparent; border:1px solid var(--border-color); color:var(--text-color); border-radius:10px; padding: 12px;">Cancel</button>
+                <button onclick="confirmCheckout()" style="flex:2; border-radius:10px; padding: 12px;">Pay & Place
+                    Order</button>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

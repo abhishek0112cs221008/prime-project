@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prime Project - Login</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <nav class="nav">
+        <a href="index.html" class="nav-brand">Prime Project</a>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">◐</button>
+    </nav>
+
+    <div class="container" style="display: flex; align-items: center; min-height: 80vh;">
+        <div style="flex: 1; text-align: center;">
+            <h1 style="font-size: 56px; margin-bottom: 10px;">Welcome Back.</h1>
+            <p style="font-size: 24px; max-width: 600px; margin: 0 auto 40px;">Sign in to access your bag and checkout.
+            </p>
+        </div>
+        <div class="form-box" style="flex: 0 0 400px; margin: 0;">
+            <h2>Sign In</h2>
+            <input type="email" id="email" placeholder="Email Address" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <p id="error-msg" class="error-msg">Invalid credentials. Please try again.</p>
+            <button onclick="login()">Sign In</button>
+            <p style="margin-top: 20px;">Don't have an account? <a href="register.html">Create one</a></p>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <p>Copyright © 2026 Prime Project Inc. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Use</a>
+                <a href="#">Sales and Refunds</a>
+                <a href="#">Legal</a>
+                <a href="#">Site Map</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script>
+        // Override login for token handling
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('error-msg');
+
+            errorMsg.style.display = 'none';
+
+            try {
+                // Return structure is { user: {...}, token: "..." }
+                const response = await Api.post('/auth/login', { email, password });
+
+                if (response && response.token) {
+                    // Flatten structure for easier storage: { ...userFields, token: "..." }
+                    const userWithToken = { ...response.user, token: response.token };
+                    localStorage.setItem('user', JSON.stringify(userWithToken));
+                    window.location.href = 'index.html';
+                } else {
+                    throw new Error("Invalid response from server");
+                }
+            } catch (e) {
+                console.error(e);
+                errorMsg.style.display = 'block';
+                errorMsg.innerText = e.message || 'Login failed. Please check your credentials.';
+            }
+        }
+    </script>
+</body>
+
+</html>

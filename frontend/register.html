@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Prime Project - Register</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <nav class="nav">
+        <a href="index.html" class="nav-brand">Prime Project</a>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">◐</button>
+    </nav>
+
+    <div class="container" style="padding-top: 60px;">
+        <div class="form-box">
+            <h2>Create Account</h2>
+            <p style="margin-bottom: 30px;">Join us today.</p>
+            <input type="text" id="name" placeholder="Full Name" required>
+            <input type="email" id="email" placeholder="Email Address" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button onclick="register()">Create Account</button>
+            <p style="margin-top: 20px;">Already have an account? <a href="login.html">Sign in</a></p>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <p>Copyright © 2026 Prime Project Inc. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Use</a>
+                <a href="#">Sales and Refunds</a>
+                <a href="#">Legal</a>
+                <a href="#">Site Map</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script>
+        async function register() {
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            try {
+                await Api.post('/auth/register', { name, email, password });
+                alert('Registration successful! Please login.');
+                window.location.href = 'login.html';
+            } catch (e) { }
+        }
+    </script>
+</body>
+
+</html>

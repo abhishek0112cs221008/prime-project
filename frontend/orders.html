@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Prime Project - Orders</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <nav class="nav">
+        <a href="index.html" class="nav-brand">Prime Project</a>
+        <div class="nav-links">
+            <a href="index.html">Projects</a>
+            <a href="cart.html">Cart</a>
+            <a href="orders.html" style="color: var(--accent-color)">Orders</a>
+            <span id="auth-links"></span>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">◐</button>
+    </nav>
+
+    <div class="container">
+        <h1>Your Orders.</h1>
+        <p style="text-align: center; margin-bottom: 40px;">Track, return, or buy again.</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th
+                        style="text-align: left; padding: 15px 0; color: var(--text-secondary); font-weight: normal; font-size: 12px;">
+                        DATE PLACED</th>
+                    <th
+                        style="text-align: left; padding: 15px 0; color: var(--text-secondary); font-weight: normal; font-size: 12px;">
+                        ORDER ID</th>
+                    <th
+                        style="text-align: left; padding: 15px 0; color: var(--text-secondary); font-weight: normal; font-size: 12px;">
+                        PRODUCT</th>
+                    <th
+                        style="text-align: left; padding: 15px 0; color: var(--text-secondary); font-weight: normal; font-size: 12px;">
+                        STATUS</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="order-list"></tbody>
+        </table>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <p>Copyright © 2026 Prime Project Inc. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Use</a>
+                <a href="#">Sales and Refunds</a>
+                <a href="#">Legal</a>
+                <a href="#">Site Map</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script>
+        if (!requireLogin()) throw new Error("Redirecting");
+
+        async function loadOrders() {
+            const orders = await Api.get('/orders');
+            if (!orders) return;
+
+            const container = document.getElementById('order-list');
+            if (orders.length === 0) {
+                container.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 40px;">You have no orders yet.</td></tr>';
+                return;
+            }
+            container.innerHTML = orders.map(o => `
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 20px 0; color: var(--text-secondary);">${new Date(o.orderDate).toLocaleDateString()}</td>
+                    <td style="padding: 20px 0; font-family: monospace; font-size: 14px;">${o.paymentId.substring(0, 8)}...</td>
+                    <td style="padding: 20px 0;">
+                        <span style="font-weight: 500; font-size: 16px;">${o.product.name}</span>
+                        <div style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">ID: #${o.product.id}</div>
+                    </td>
+                    <td style="padding: 20px 0;">
+                        <span style="display:inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; border: 1px solid ${o.verified || o.status === 'Confirmed' ? 'var(--accent-color)' : 'var(--border-color)'}; color: ${o.verified || o.status === 'Confirmed' ? 'var(--accent-color)' : 'var(--text-secondary)'};">
+                            ${o.status.toUpperCase()}
+                        </span>
+                    </td>
+                    <td style="padding: 20px 0; text-align: right;">
+                        ${o.verified || o.status === 'Confirmed'
+                    ? `<button onclick="accessProject(${o.id}, '${o.product.name.replace(/'/g, "\\'")}')" class="secondary" style="font-size: 13px;">View Purchase Details</button>`
+                    : `<span style="font-size: 12px; color: var(--text-secondary);">Verifying payment...</span>`}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function accessProject(orderId, productName) {
+            try {
+                const res = await Api.get(`/orders/${orderId}/access`);
+
+                const modal = document.createElement('div');
+                modal.id = 'content-modal';
+                modal.style.cssText = `
+                    position: fixed; inset: 0;
+                    background: rgba(0,0,0,0); 
+                    z-index: 2000;
+                    display: flex; align-items: flex-end; justify-content: center;
+                    transition: background 0.4s cubic-bezier(0.32, 0, 0.67, 0), backdrop-filter 0.4s;
+                    backdrop-filter: blur(0px);
+                `;
+
+                // iOS-style sheet
+                const sheetStyle = `
+                    background: var(--bg-color); 
+                    width: 100%; max-width: 700px; 
+                    padding: 40px; 
+                    border-radius: 20px 20px 0 0; 
+                    position: relative; 
+                    max-height: 85vh; 
+                    overflow-y: auto; 
+                    border-top: 1px solid var(--border-color);
+                    box-shadow: 0 -10px 40px rgba(0,0,0,0.3);
+                    transform: translateY(100%);
+                    transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+                `;
+
+                modal.innerHTML = `
+                    <div id="modal-sheet" style="${sheetStyle}">
+                        <div style="width: 40px; height: 5px; background: var(--text-secondary); border-radius: 3px; margin: -20px auto 30px; opacity: 0.2;"></div>
+                        <button onclick="closeModal()" style="position: absolute; top: 25px; right: 25px; background: rgba(128,128,128,0.1); width: 30px; height: 30px; border-radius: 50%; color: var(--text-color); font-size: 18px; border: none; cursor: pointer; display:flex; align-items:center; justify-content:center;">×</button>
+                        
+                        <h2 style="margin-top: 0; margin-bottom: 5px; font-size: 24px;">${productName}</h2>
+                        <p style="color: var(--accent-color); font-size: 13px; margin-top: 0; margin-bottom: 30px;">Authenticated & Verified • ${new Date().toLocaleDateString()}</p>
+                        
+                        <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 16px; margin-bottom: 30px; border: 1px solid var(--border-color);">
+                            <h4 style="margin: 0 0 12px 0; color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Git Repository</h4>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <code style="flex: 1; padding: 12px 15px; background: rgba(0,0,0,0.3); color: var(--text-color); border-radius: 10px; font-family: monospace; border: 1px solid var(--border-color); font-size: 13px;">${res.gitRepoUrl || 'No URL provided'}</code>
+                                <button onclick="window.open('${res.gitRepoUrl}', '_blank')" style="border-radius: 10px; padding: 0 20px;">Open</button>
+                            </div>
+                        </div>
+
+                        <h4 style="margin-bottom: 15px; font-size: 16px;">Installation Instructions</h4>
+                        <div style="line-height: 1.6; color: var(--text-secondary); white-space: pre-wrap; font-family: 'Consolas', monospace; font-size: 13px; background: rgba(0,0,0,0.03); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); max-height: 300px; overflow-y: auto;">${res.installationGuide || 'No specific instructions provided.'}</div>
+
+                        <div style="margin-top: 40px; text-align: center; opacity: 0.5;">
+                            <p style="font-size: 11px;">Licensed to you. Do not distribute.</p>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+
+                // Trigger animation
+                requestAnimationFrame(() => {
+                    modal.style.background = 'rgba(0,0,0,0.6)';
+                    modal.style.backdropFilter = 'blur(8px)';
+                    document.getElementById('modal-sheet').style.transform = 'translateY(0)';
+                });
+
+                // Close function
+                window.closeModal = function () {
+                    modal.style.background = 'rgba(0,0,0,0)';
+                    modal.style.backdropFilter = 'blur(0px)';
+                    const sheet = document.getElementById('modal-sheet');
+                    if (sheet) sheet.style.transform = 'translateY(100%)';
+                    setTimeout(() => modal.remove(), 400);
+                }
+
+                // Close on click outside
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) closeModal();
+                });
+
+            } catch (e) {
+                alert("Access Denied: " + e.message);
+            }
+        }
+
+        loadOrders();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Prime Project - Admin Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <nav class="nav">
+        <a href="index.html" class="nav-brand">Prime Project</a>
+        <div class="nav-links">
+            <a href="dashboard.html" style="color: var(--accent-color)">Dashboard</a>
+            <a href="index.html">Projects</a>
+            <a href="cart.html">Cart</a>
+            <span id="auth-links"></span>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">◐</button>
+    </nav>
+
+    <div class="container">
+        <h1>Overview</h1>
+
+        <div id="admin-stats"
+            style="display:none; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; margin-top: 40px;">
+            <div class="product-card" style="align-items: flex-start; text-align: left;">
+                <h3 style="color: var(--text-secondary); font-weight: 500;">Total Projects</h3>
+                <p id="stat-prod" style="font-size: 48px; font-weight: 700; color: var(--text-color); margin: 10px 0;">
+                    --</p>
+            </div>
+            <div class="product-card" style="align-items: flex-start; text-align: left;">
+                <h3 style="color: var(--text-secondary); font-weight: 500;">Total Users</h3>
+                <p id="stat-users" style="font-size: 48px; font-weight: 700; color: var(--text-color); margin: 10px 0;">
+                    --</p>
+            </div>
+            <div class="product-card" style="align-items: flex-start; text-align: left;">
+                <h3 style="color: var(--text-secondary); font-weight: 500;">Total Orders</h3>
+                <p id="stat-orders"
+                    style="font-size: 48px; font-weight: 700; color: var(--text-color); margin: 10px 0;">--</p>
+            </div>
+        </div>
+
+        <div style="margin-top: 60px; text-align: center;">
+            <a href="index.html"><button style="width: auto;">Go to Projects</button></a>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <p>Copyright © 2026 VOYA Inc. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Use</a>
+                <a href="#">Sales and Refunds</a>
+                <a href="#">Legal</a>
+                <a href="#">Site Map</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script>
+        if (!requireLogin()) throw new Error("Redirecting");
+
+        const user = checkLogin();
+        if (user.role === 'admin') {
+            document.getElementById('admin-stats').style.display = 'grid';
+            loadStats();
+        } else {
+            alert('Access Denied');
+            window.location.href = 'index.html';
+        }
+
+        async function loadStats() {
+            try {
+                const stats = await Api.get('/dashboard/stats');
+                document.getElementById('stat-prod').innerText = stats.totalProducts;
+                document.getElementById('stat-users').innerText = stats.totalCustomers;
+                document.getElementById('stat-orders').innerText = stats.totalOrders;
+            } catch (e) { }
+        }
+    </script>
+</body>
+
+</html>

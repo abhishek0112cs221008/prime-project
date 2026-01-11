@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>VOYA - Checkout</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <nav class="nav">
+        <a href="index.html" class="nav-brand">VOYA</a>
+        <div class="nav-links">
+            <a href="index.html">Store</a>
+            <a href="cart.html">Bag</a>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">◐</button>
+    </nav>
+
+    <div class="container">
+        <h1>Checkout</h1>
+
+        <!-- Shipping & Discount -->
+        <div>
+            <h3>1. Location Details</h3>
+            <div class="form-box"
+                style="box-shadow: none; padding: 0; margin: 0; max-width: 100%; text-align: left; background: transparent;">
+                <p style="font-size: 14px; margin-bottom: 5px; color: var(--text-secondary);">Enter your Country and
+                    State (e.g. India, Karnataka)</p>
+                <textarea id="address" placeholder="Country, State" rows="2" style="resize: none;"></textarea>
+
+                <h3 style="margin-top: 20px;">2. Discount Code</h3>
+                <div style="display: flex; gap: 10px;">
+                    <input id="discount" placeholder="Promo Code" style="margin-bottom: 0;">
+                    <button onclick="applyDiscount()" style="width: auto;" class="secondary">Apply</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment & Review -->
+        <div>
+            <h3>3. Payment (UTR Verification)</h3>
+            <div class="product-card" style="align-items: center; text-align: center;">
+                <p style="margin-bottom: 10px;">Scan to Pay via UPI</p>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg"
+                    style="width: 200px; height: 200px; margin: 10px 0; mix-blend-mode: normal; border-radius: 8px;"
+                    alt="QR Code">
+                <p style="font-size: 16px; font-weight: bold; margin: 10px 0;">UPI ID: voya@upi</p>
+                <p style="font-size: 13px; color: var(--text-secondary);">Please complete payment and enter UTR below.
+                </p>
+            </div>
+
+            <h3 style="margin-top: 30px;">4. Verification</h3>
+            <div class="form-box"
+                style="box-shadow: none; padding: 0; margin: 0; max-width: 100%; text-align: left; background: transparent;">
+                <input id="utr" placeholder="Enter UPI Transaction ID (UTR)" required>
+                <button onclick="placeOrder()">Verify & Place Order</button>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <p>Copyright © 2026 VOYA Inc. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script>
+        if (!requireLogin()) throw new Error("Redirecting");
+
+        function applyDiscount() {
+            const code = document.getElementById('discount').value;
+            if (code.toUpperCase() === 'SAVE10') {
+                alert("Discount Applied: 10% OFF");
+            } else {
+                alert("Invalid Code");
+            }
+        }
+
+        async function placeOrder() {
+            const address = document.getElementById('address').value;
+            const utr = document.getElementById('utr').value;
+            const discount = document.getElementById('discount').value;
+
+            if (!address || !utr) {
+                alert("Please provide Country, State and UTR ID.");
+                return;
+            }
+
+            try {
+                const body = {
+                    shippingAddress: address,
+                    utr: utr,
+                    discountCode: discount
+                };
+
+                const res = await Api.post('/orders', body);
+                alert(res.message);
+                window.location.href = 'orders.html';
+            } catch (e) {
+                alert("Order Failed: " + e.message);
+            }
+        }
+    </script>
+</body>
+
+</html>
