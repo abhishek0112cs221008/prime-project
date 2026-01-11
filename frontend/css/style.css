@@ -4,8 +4,10 @@
     --card-bg: #ffffff;
     --text-color: #1d1d1f;
     --text-secondary: #86868b;
-    --accent-color: #0071e3;
-    --accent-hover: #0077ed;
+    /* --accent-color: #0071e3; */
+    --accent-color: #FF033E;
+    /* --accent-hover: #0077ed; */
+    --accent-hover: #FF033E;
     --danger-color: #ff3b30;
     --border-color: #d2d2d7;
     --nav-bg: rgba(255, 255, 255, 0.8);
@@ -23,8 +25,10 @@
     --card-bg: #1c1c1e;
     --text-color: #f5f5f7;
     --text-secondary: #86868b;
-    --accent-color: #2997ff;
-    --accent-hover: #0071e3;
+    /* --accent-color: #2997ff; */
+    --accent-color: #FF033E;
+    /* --accent-hover: #0071e3; */
+    --accent-hover: #FF033E;
     --danger-color: #ff453a;
     --border-color: #38383a;
     --nav-bg: rgba(28, 28, 30, 0.8);
@@ -40,8 +44,8 @@
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 1px;
+    height: 1px;
 }
 
 ::-webkit-scrollbar-track {
