@@ -3,7 +3,6 @@ package com.abhishek.voya.controller;
 import com.abhishek.voya.dto.DTOs;
 import com.abhishek.voya.entity.User;
 import com.abhishek.voya.service.AuthService;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
