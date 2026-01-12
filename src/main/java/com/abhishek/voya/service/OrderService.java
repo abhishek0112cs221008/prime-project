@@ -92,6 +92,14 @@ public class OrderService {
         orderRepository.save(order);
     }
 
+    public void rejectOrder(Integer orderId, String reason) {
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new BadRequestException("Order not found"));
+        order.setVerified(false);
+        order.setStatus("Rejected");
+        order.setRejectionReason(reason);
+        orderRepository.save(order);
+    }
+
     public java.util.Map<String, String> getProjectAccess(String userEmail, Integer orderId) {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new BadRequestException("Order not found"));
         if (!order.getUserEmail().equals(userEmail)) {

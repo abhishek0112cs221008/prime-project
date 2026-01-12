@@ -36,6 +36,22 @@ public class ProductController {
         return ResponseEntity.ok(productService.getProductById(id));
     }
 
+    @GetMapping("/recommendations")
+    public ResponseEntity<List<Product>> getRecommendations(
+            @RequestHeader(value = "X-Auth-Token", required = false) String token) {
+        Integer userId = sessionService.getUserId(token);
+        if (userId == null) {
+            return ResponseEntity.ok(java.util.Collections.emptyList());
+        }
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null || user.getInterests() == null || user.getInterests().isEmpty()) {
+            return ResponseEntity.ok(java.util.Collections.emptyList());
+        }
+
+        List<String> interests = java.util.Arrays.asList(user.getInterests().split(","));
+        return ResponseEntity.ok(productService.getRecommendations(interests));
+    }
+
     @PostMapping
     public ResponseEntity<Product> createProduct(@Valid @RequestBody DTOs.ProductRequest request,
             @RequestHeader(value = "X-Auth-Token", required = false) String token) {

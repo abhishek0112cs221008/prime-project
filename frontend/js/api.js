@@ -1,5 +1,6 @@
-// const API_BASE = 'https://YOUR-RENDER-SERVICE-NAME.onrender.com/api'; // TODO: Replace with your actual Render URL
 const API_BASE = 'https://prime-project.onrender.com/api';
+// const API_BASE = 'http://localhost:8080/api';
+
 class Api {
     static async request(endpoint, method = 'GET', body = null) {
         // Read Token

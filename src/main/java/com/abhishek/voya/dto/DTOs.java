@@ -63,4 +63,17 @@ public class DTOs {
         private String utr;
         private String discountCode;
     }
+
+    @Data
+    public static class RejectOrderRequest {
+        @NotBlank
+        private String reason;
+    }
+
+    @Data
+    public static class UpdateProfileRequest {
+        @NotBlank
+        private String name;
+        private String interests;
+    }
 }

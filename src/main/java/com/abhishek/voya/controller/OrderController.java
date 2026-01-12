@@ -65,6 +65,19 @@ public class OrderController {
         return ResponseEntity.ok().build();
     }
 
+    @PutMapping("/{id}/reject")
+    public ResponseEntity<Void> rejectOrder(@PathVariable Integer id,
+            @jakarta.validation.Valid @RequestBody DTOs.RejectOrderRequest request,
+            @RequestHeader(value = "X-Auth-Token", required = false) String token) {
+        User user = getUser(token);
+        if (user.getRole() != User.Role.admin) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN, "Admin access required");
+        }
+        orderService.rejectOrder(id, request.getReason());
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/{id}/access")
     public ResponseEntity<Map<String, String>> getProjectAccess(@PathVariable Integer id,
             @RequestHeader(value = "X-Auth-Token", required = false) String token) {

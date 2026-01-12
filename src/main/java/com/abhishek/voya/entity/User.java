@@ -24,6 +24,8 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    private String interests;
+
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "ENUM('admin', 'customer') DEFAULT 'customer'")
     private Role role;

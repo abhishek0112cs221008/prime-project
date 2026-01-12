@@ -46,4 +46,17 @@ public class AuthService {
         }
         return user;
     }
+
+    public User updateProfile(Integer userId, DTOs.UpdateProfileRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        user.setName(request.getName());
+        user.setInterests(request.getInterests());
+        return userRepository.save(user);
+    }
+
+    public User getUserById(Integer userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    }
 }

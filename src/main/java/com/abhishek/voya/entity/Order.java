@@ -44,4 +44,7 @@ public class Order {
     private String paymentId;
 
     private String status = "Pending Verification";
+
+    @Column(name = "rejection_reason")
+    private String rejectionReason;
 }

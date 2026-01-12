@@ -46,6 +46,21 @@ public class ProductService {
         productRepository.deleteById(id);
     }
 
+    public List<Product> getRecommendations(List<String> interests) {
+        if (interests == null || interests.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        java.util.Set<Product> recommendations = new java.util.HashSet<>();
+        for (String interest : interests) {
+            String term = interest.trim();
+            if (!term.isEmpty()) {
+                recommendations.addAll(productRepository.findByNameContainingIgnoreCase(term));
+                recommendations.addAll(productRepository.findByCategory(term));
+            }
+        }
+        return new java.util.ArrayList<>(recommendations);
+    }
+
     private void mapRequestToProduct(DTOs.ProductRequest request, Product p) {
         p.setName(request.getName());
         p.setCategory(request.getCategory());

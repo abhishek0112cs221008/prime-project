@@ -22,26 +22,32 @@ public class CartService {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private com.abhishek.voya.repository.OrderRepository orderRepository;
+
     public List<CartItem> getCart(String userEmail) {
         return cartItemRepository.findByUserEmail(userEmail);
     }
 
     @Transactional
     public CartItem addToCart(String userEmail, DTOs.CartRequest request) {
+        // Check if user has an active order (anything EXCEPT "Rejected")
+        if (orderRepository.existsByUserEmailAndProductIdAndStatusNot(userEmail, request.getProductId(), "Rejected")) {
+            throw new com.abhishek.voya.exception.BadRequestException("You have already purchased this project.");
+        }
+
         Product product = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         Optional<CartItem> existing = cartItemRepository.findByUserEmailAndProductId(userEmail, request.getProductId());
 
         if (existing.isPresent()) {
-            CartItem item = existing.get();
-            item.setQuantity(item.getQuantity() + request.getQuantity());
-            return cartItemRepository.save(item);
+            throw new com.abhishek.voya.exception.BadRequestException("Item is already in your cart.");
         } else {
             CartItem item = new CartItem();
             item.setUserEmail(userEmail);
             item.setProduct(product);
-            item.setQuantity(request.getQuantity());
+            item.setQuantity(1); // Force quantity to 1 for digital products
             return cartItemRepository.save(item);
         }
     }

@@ -46,8 +46,15 @@ public class AuthController {
         Integer userId = sessionService.getUserId(token);
         if (userId == null)
             return ResponseEntity.status(401).build();
-        // For simplicity, we just return the user object if valid, in real app fetch
-        // from DB
-        return ResponseEntity.ok(new User());
+        return ResponseEntity.ok(authService.getUserById(userId));
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<User> updateProfile(@RequestHeader(value = "X-Auth-Token", required = false) String token,
+            @Valid @RequestBody DTOs.UpdateProfileRequest request) {
+        Integer userId = sessionService.getUserId(token);
+        if (userId == null)
+            return ResponseEntity.status(401).build();
+        return ResponseEntity.ok(authService.updateProfile(userId, request));
     }
 }
