@@ -70,5 +70,7 @@ public class ProductService {
         p.setDescription(request.getDescription());
         p.setGitRepoUrl(request.getGitRepoUrl());
         p.setInstallationGuide(request.getInstallationGuide());
+        p.setDiscountCode(request.getDiscountCode());
+        p.setDiscountPercentage(request.getDiscountPercentage());
     }
 }

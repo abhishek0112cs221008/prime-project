@@ -38,4 +38,10 @@ public class Product {
 
     @Column(name = "view_count")
     private Integer viewCount = 0;
+
+    @Column(name = "discount_code")
+    private String discountCode;
+
+    @Column(name = "discount_percent")
+    private BigDecimal discountPercentage;
 }

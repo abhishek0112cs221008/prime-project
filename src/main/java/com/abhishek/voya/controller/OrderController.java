@@ -86,6 +86,20 @@ public class OrderController {
         return ResponseEntity.ok(accessDetails);
     }
 
+    @PostMapping("/validate-discount")
+    public ResponseEntity<Map<String, Object>> validateDiscount(
+            @RequestBody Map<String, Object> request,
+            @RequestHeader(value = "X-Auth-Token", required = false) String token) {
+        User user = getUser(token);
+        String code = (String) request.get("code");
+
+        // We need cart items to calculate discount, but we can fetch them from DB using
+        // user email
+        // Or receive them in body. Fetching from DB is safer.
+        Map<String, Object> result = orderService.validateDiscount(user.getEmail(), code);
+        return ResponseEntity.ok(result);
+    }
+
     private User getUser(String token) {
         Integer userId = sessionService.getUserId(token);
         if (userId == null)

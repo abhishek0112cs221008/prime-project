@@ -46,7 +46,7 @@
                 <tr>
                     <th>Product</th>
                     <th>Price</th>
-                    <th>Quantity</th>
+                    <!-- <th>Quantity</th> Removed -->
                     <th>Subtotal</th>
                     <th></th>
                 </tr>
@@ -58,7 +58,7 @@
             <div style="font-size: 24px; font-weight: 600; margin-bottom: 20px;">
                 Total: <span id="cart-total">₹0</span>
             </div>
-            <button onclick="checkout()" style="width: 200px;">Check Out</button>
+            <button id="checkout-btn" onclick="checkout()" style="width: 200px;">Check Out</button>
         </div>
     </div>
 
@@ -108,64 +108,31 @@
         </a>
     </nav>
 
-    <!-- Checkout Modal moved before scripts to prevent null reference error -->
-    <div id="checkout-modal"
-        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0); z-index:1000; align-items:flex-end; justify-content:center; backdrop-filter: blur(0px); transition: background 0.4s cubic-bezier(0.32, 0, 0.67, 0), backdrop-filter 0.4s;">
-        <div id="checkout-sheet"
-            style="background:var(--card-bg); width:100%; max-width:500px; padding:30px; border-radius:20px 20px 0 0; position:relative; border-top: 1px solid var(--border-color); transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); box-shadow: 0 -10px 40px rgba(0,0,0,0.3);">
-
-            <div
-                style="width: 40px; height: 5px; background: var(--text-secondary); border-radius: 3px; margin: -10px auto 20px; opacity: 0.2;">
-            </div>
-
-            <h2 style="margin-top:0;">Secure Checkout</h2>
-            <p style="margin-bottom:20px; font-size:14px; color:var(--text-secondary);">Scan QR to Pay, then enter UTR.
-            </p>
-
-            <div style="margin-bottom:20px; text-align:center;">
-                <img src="images/payment_qr.png"
-                    style="width:150px; height:150px; border-radius:10px; border:1px solid var(--border-color);">
-            </div>
-
-            <!-- Shipping Address Removed (Digital Product) -->
-            <!-- <div style="margin-bottom:15px;" ... > -->
-
-            <div style="margin-bottom:15px;">
-                <label style="display:block; margin-bottom:5px; font-size:13px;">Payment Reference (UTR)</label>
-                <input id="payment-utr" placeholder="UPI12345678"
-                    style="width:100%; padding:12px; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:10px;">
-            </div>
-
-            <div style="margin-bottom:25px;">
-                <label style="display:block; margin-bottom:5px; font-size:13px;">Discount Code (Optional)</label>
-                <input id="discount-code" placeholder="SAVE10"
-                    style="width:100%; padding:12px; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:10px;">
-            </div>
-
-            <div style="display:flex; gap:10px;">
-                <button onclick="closeCheckout()"
-                    style="flex:1; background:transparent; border:1px solid var(--border-color); color:var(--text-color); border-radius:10px; padding: 12px;">Cancel</button>
-                <button onclick="confirmCheckout()" style="flex:2; border-radius:10px; padding: 12px;">Pay & Place
-                    Order</button>
-            </div>
-        </div>
-    </div>
+    <!-- Duplicate Checkout Modal Removed -->
 
     <script src="js/api.js"></script>
     <script>
         if (!requireLogin()) throw new Error("Redirecting");
 
+        let currentTotal = 0;
+        let appliedDiscount = 0;
+
         async function loadCart() {
             try {
                 const items = await Api.get('/cart');
-                console.log("DEBUG: Cart Data Received:", items);
-
                 const container = document.getElementById('cart-list');
                 const totalEl = document.getElementById('cart-total');
+                const checkoutBtn = document.getElementById('checkout-btn');
 
                 if (!items || items.length === 0) {
-                    container.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 40px;">Your cart is empty. <a href="index.html">Browse Projects</a></td></tr>';
+                    container.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 40px;">Your cart is empty. <a href="index.html">Browse Projects</a></td></tr>';
                     totalEl.innerText = '₹0';
+                    currentTotal = 0;
+                    if (checkoutBtn) {
+                        checkoutBtn.disabled = true;
+                        checkoutBtn.style.opacity = '0.5';
+                        checkoutBtn.style.cursor = 'not-allowed';
+                    }
                     return;
                 }
 
@@ -173,14 +140,10 @@
                 let html = '';
 
                 items.forEach(item => {
-                    // Safety checks
-                    if (!item.product) {
-                        console.error("Cart Item missing product data:", item);
-                        return;
-                    }
-
+                    if (!item.product) return;
                     const p = item.product;
                     const price = p.price || 0;
+                    // Quantity ignored for display as per request
                     const quantity = item.quantity || 1;
                     const subtotal = price * quantity;
                     const img = p.imageUrl || 'https://via.placeholder.com/50?text=No+Img';
@@ -197,7 +160,7 @@
                                 </div>
                             </td>
                             <td>₹${price.toLocaleString('en-IN')}</td>
-                            <td>${quantity}</td>
+                            <!-- Quantity Column Removed -->
                             <td>₹${subtotal.toLocaleString('en-IN')}</td>
                             <td style="text-align:right;">
                                 <button class="danger" style="width: auto; padding: 8px 12px; font-size: 13px;" onclick="removeItem(${item.id})">Remove</button>
@@ -206,17 +169,25 @@
                     `;
                 });
 
-                if (html === '') {
-                    container.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 40px; color: red;">Error: Items loaded but had missing details. Check console.</td></tr>';
-                } else {
-                    container.innerHTML = html;
-                }
-
+                container.innerHTML = html;
+                currentTotal = total;
                 totalEl.innerText = '₹' + total.toLocaleString('en-IN');
+
+                if (checkoutBtn) {
+                    if (total === 0) {
+                        checkoutBtn.disabled = true;
+                        checkoutBtn.style.opacity = '0.5';
+                        checkoutBtn.style.cursor = 'not-allowed';
+                    } else {
+                        checkoutBtn.disabled = false;
+                        checkoutBtn.style.opacity = '1';
+                        checkoutBtn.style.cursor = 'pointer';
+                    }
+                }
 
             } catch (err) {
                 console.error("CRITICAL ERROR IN loadCart:", err);
-                document.getElementById('cart-list').innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 40px; color: red;">Failed to load cart. ${err.message}</td></tr>`;
+                document.getElementById('cart-list').innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 40px; color: red;">Failed to load cart. ${err.message}</td></tr>`;
             }
         }
 
@@ -227,10 +198,17 @@
             } catch (e) { }
         }
 
-        async function checkout() {
+        function checkout() {
+            if (currentTotal <= 0) return;
             const modal = document.getElementById('checkout-modal');
             modal.style.display = 'flex';
-            // Trigger animation
+
+            // Reset Discount
+            appliedDiscount = 0;
+            document.getElementById('discount-code').value = '';
+            document.getElementById('final-amount').innerText = '₹' + currentTotal.toLocaleString('en-IN');
+            document.getElementById('discount-msg').innerHTML = '';
+
             requestAnimationFrame(() => {
                 modal.style.background = 'rgba(0,0,0,0.6)';
                 modal.style.backdropFilter = 'blur(8px)';
@@ -249,10 +227,49 @@
             }, 400);
         }
 
-        // Close on click outside
-        document.getElementById('checkout-modal').addEventListener('click', (e) => {
-            if (e.target === document.getElementById('checkout-modal')) closeCheckout();
+        document.addEventListener('DOMContentLoaded', () => {
+            const modal = document.getElementById('checkout-modal');
+            if (modal) {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) closeCheckout();
+                });
+            }
         });
+
+        async function applyDiscount() {
+            const code = document.getElementById('discount-code').value.trim();
+            const msgEl = document.getElementById('discount-msg');
+            const totalEl = document.getElementById('final-amount');
+
+            if (!code) {
+                appliedDiscount = 0;
+                totalEl.innerText = '₹' + currentTotal.toLocaleString('en-IN');
+                msgEl.innerHTML = '';
+                return;
+            }
+
+            try {
+                // We don't need to send cart items if backend fetches from DB based on user context
+                const res = await Api.post('/orders/validate-discount', { code: code });
+
+                if (res.valid) {
+                    appliedDiscount = res.discountAmount;
+                    const final = res.finalTotal;
+                    totalEl.innerText = '₹' + final.toLocaleString('en-IN');
+                    msgEl.innerHTML = `<span style="color: var(--success-color, #4caf50); font-size: 12px;">${res.message}</span>`;
+                } else {
+                    appliedDiscount = 0;
+                    totalEl.innerText = '₹' + currentTotal.toLocaleString('en-IN');
+                    msgEl.innerHTML = `<span style="color: red; font-size: 12px;">${res.message}</span>`;
+                }
+            } catch (e) {
+                console.error("Discount validation failed", e);
+                // Fallback or ignore
+                appliedDiscount = 0;
+                totalEl.innerText = '₹' + currentTotal.toLocaleString('en-IN');
+                msgEl.innerHTML = `<span style="color: red; font-size: 12px;">Unknown error checking code.</span>`;
+            }
+        }
 
         async function confirmCheckout() {
             // const address = document.getElementById('shipping-address').value;
@@ -283,7 +300,6 @@
 
         loadCart().catch(e => {
             console.error("Critical error loading cart:", e);
-            document.getElementById('cart-list').innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 40px; color: red;">Failed to load cart. ${e.message}</td></tr>`;
         });
     </script>
 
@@ -297,14 +313,14 @@
                 style="width: 40px; height: 5px; background: var(--text-secondary); border-radius: 3px; margin: -10px auto 20px; opacity: 0.2;">
             </div>
 
-            <h2 style="margin-top:0;">Secure Checkout</h2>
-            <p style="margin-bottom:20px; font-size:14px; color:var(--text-secondary);">Enter your shipping and payment
-                details.</p>
+            <h2 style="margin-top:0; margin-bottom: 5px;">Secure Checkout</h2>
+            <p style="margin-bottom:20px; font-size:14px; color:var(--text-secondary);">Total Payable: <strong
+                    id="final-amount" style="color: var(--text-color); font-size: 16px;">₹0</strong></p>
 
-            <div style="margin-bottom:15px;">
-                <label style="display:block; margin-bottom:5px; font-size:13px;">Shipping Address</label>
-                <input id="shipping-address" placeholder="123 Main St, City, Country"
-                    style="width:100%; padding:12px; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:10px;">
+            <div style="margin-bottom:20px; text-align:center;">
+                <img src="images/payment_qr.png"
+                    style="width:150px; height:150px; border-radius:10px; border:1px solid var(--border-color);">
+                <p style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">Scan to Pay</p>
             </div>
 
             <div style="margin-bottom:15px;">
@@ -314,9 +330,13 @@
             </div>
 
             <div style="margin-bottom:25px;">
-                <label style="display:block; margin-bottom:5px; font-size:13px;">Discount Code (Optional)</label>
-                <input id="discount-code" placeholder="SAVE10"
-                    style="width:100%; padding:12px; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:10px;">
+                <label style="display:block; margin-bottom:5px; font-size:13px;">Discount Code</label>
+                <div style="display: flex; gap: 10px;">
+                    <input id="discount-code" placeholder="SAVE10" oninput="applyDiscount()"
+                        style="flex: 1; padding:12px; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:10px;">
+                    <!-- <button onclick="applyDiscount()" class="secondary" style="padding: 0 15px;">Apply</button> -->
+                </div>
+                <div id="discount-msg" style="margin-top: 5px; min-height: 15px;"></div>
             </div>
 
             <div style="display:flex; gap:10px;">

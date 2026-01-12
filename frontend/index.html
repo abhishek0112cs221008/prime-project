@@ -95,6 +95,10 @@
                     <input id="p-price" type="number" placeholder="Price (₹)">
                     <input id="p-git" placeholder="Git Repository URL (Hidden from User)">
                     <input id="p-img" placeholder="Image URL (Optional)">
+                    <div style="grid-column: span 2; display: flex; gap: 20px;">
+                        <input id="p-dcode" placeholder="Discount Code (e.g. SAVE20)">
+                        <input id="p-dperc" type="number" placeholder="Discount %">
+                    </div>
                     <div style="grid-column: span 2;">
                         <textarea id="p-desc" placeholder="Description" rows="3"></textarea>
                         <textarea id="p-install" placeholder="Installation Guidelines (Hidden from User)" rows="4"
@@ -418,6 +422,8 @@
             document.getElementById('p-img').value = '';
             document.getElementById('p-desc').value = '';
             document.getElementById('p-install').value = '';
+            document.getElementById('p-dcode').value = '';
+            document.getElementById('p-dperc').value = '';
             document.getElementById('form-title').innerText = 'New Project';
             document.getElementById('btn-save').innerText = 'Add to Hub';
         }
@@ -449,6 +455,8 @@
                 if (p) {
                     document.getElementById('p-git').value = p.gitRepoUrl || '';
                     document.getElementById('p-install').value = p.installationGuide || '';
+                    document.getElementById('p-dcode').value = p.discountCode || '';
+                    document.getElementById('p-dperc').value = p.discountPercentage || '';
                 }
             } catch (e) {
                 console.error("Failed to fetch full product details for edit", e);
@@ -467,7 +475,9 @@
                 imageUrl: document.getElementById('p-img').value,
                 description: document.getElementById('p-desc').value,
                 gitRepoUrl: document.getElementById('p-git').value,
-                installationGuide: document.getElementById('p-install').value
+                installationGuide: document.getElementById('p-install').value,
+                discountCode: document.getElementById('p-dcode').value,
+                discountPercentage: document.getElementById('p-dperc').value ? parseFloat(document.getElementById('p-dperc').value) : null
             };
 
             try {

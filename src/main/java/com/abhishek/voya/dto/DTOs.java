@@ -45,6 +45,8 @@ public class DTOs {
         private String description;
         private String gitRepoUrl;
         private String installationGuide;
+        private String discountCode;
+        private java.math.BigDecimal discountPercentage;
     }
 
     @Data

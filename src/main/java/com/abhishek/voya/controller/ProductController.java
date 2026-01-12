@@ -91,6 +91,8 @@ public class ProductController {
         map.put("description", p.getDescription());
         map.put("gitRepoUrl", p.getGitRepoUrl());
         map.put("installationGuide", p.getInstallationGuide());
+        map.put("discountCode", p.getDiscountCode());
+        map.put("discountPercentage", p.getDiscountPercentage());
 
         return ResponseEntity.ok(map);
     }
