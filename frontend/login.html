@@ -16,19 +16,20 @@
         <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">◐</button>
     </nav>
 
-    <div class="container" style="display: flex; align-items: center; min-height: 80vh;">
-        <div style="flex: 1; text-align: center;">
-            <h1 style="font-size: 56px; margin-bottom: 10px;">Welcome Back.</h1>
-            <p style="font-size: 24px; max-width: 600px; margin: 0 auto 40px;">Sign in to access your bag and checkout.
-            </p>
+    <div class="container auth-page-container">
+        <div class="auth-welcome-section">
+            <h1>Welcome Back.</h1>
+            <p>Sign in to access your projects and checkout.</p>
         </div>
-        <div class="form-box" style="flex: 0 0 400px; margin: 0;">
-            <h2>Sign In</h2>
-            <input type="email" id="email" placeholder="Email Address" required>
-            <input type="password" id="password" placeholder="Password" required>
-            <p id="error-msg" class="error-msg">Invalid credentials. Please try again.</p>
-            <button onclick="login()">Sign In</button>
-            <p style="margin-top: 20px;">Don't have an account? <a href="register.html">Create one</a></p>
+        <div class="auth-form-container">
+            <div class="form-box">
+                <h2>Sign In</h2>
+                <input type="email" id="email" placeholder="Email Address" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <p id="error-msg" class="error-msg">Invalid credentials. Please try again.</p>
+                <button onclick="login()">Sign In</button>
+                <p style="margin-top: 20px;">Don't have an account? <a href="register.html">Create one</a></p>
+            </div>
         </div>
     </div>
 

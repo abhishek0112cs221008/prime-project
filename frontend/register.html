@@ -16,15 +16,21 @@
         <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">◐</button>
     </nav>
 
-    <div class="container" style="padding-top: 60px;">
-        <div class="form-box">
-            <h2>Create Account</h2>
-            <p style="margin-bottom: 30px;">Join us today.</p>
-            <input type="text" id="name" placeholder="Full Name" required>
-            <input type="email" id="email" placeholder="Email Address" required>
-            <input type="password" id="password" placeholder="Password" required>
-            <button onclick="register()">Create Account</button>
-            <p style="margin-top: 20px;">Already have an account? <a href="login.html">Sign in</a></p>
+    <div class="container auth-page-container">
+        <div class="auth-welcome-section">
+            <h1>Join the Hub.</h1>
+            <p>Start your journey with the best projects in the world.</p>
+        </div>
+        <div class="auth-form-container">
+            <div class="form-box">
+                <h2>Create Account</h2>
+                <p style="margin-bottom: 25px; color: var(--text-secondary);">Sign up to get started.</p>
+                <input type="text" id="name" placeholder="Full Name" required>
+                <input type="email" id="email" placeholder="Email Address" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <button onclick="register()">Create Account</button>
+                <p style="margin-top: 20px;">Already have an account? <a href="login.html">Sign in</a></p>
+            </div>
         </div>
     </div>
 

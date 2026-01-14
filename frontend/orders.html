@@ -27,7 +27,7 @@
                 </svg>
                 Cart
             </a>
-            <a href="orders.html" style="color: var(--accent-color)">
+            <a href="orders.html" class="active">
                 <svg viewBox="0 0 24 24">
                     <path
                         d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm0 4c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm6 12H6v-1.4c0-2 4-3.1 6-3.1s6 1.1 6 3.1V19z" />
@@ -36,29 +36,54 @@
             </a>
             <span id="auth-links"></span>
         </div>
+        <div class="flip-clock">
+            <div class="flip-unit" id="hr1">0</div>
+            <div class="flip-unit" id="hr2">0</div>
+            <span class="clock-sep">:</span>
+            <div class="flip-unit" id="min1">0</div>
+            <div class="flip-unit" id="min2">0</div>
+            <span class="clock-sep">:</span>
+            <div class="flip-unit" id="sec1">0</div>
+            <div class="flip-unit" id="sec2">0</div>
+            <span class="clock-ampm" id="ampm">AM</span>
+        </div>
         <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">◐</button>
     </nav>
+    <script src="js/watch.js"></script>
 
     <div class="container">
-        <h1>Your Orders.</h1>
-        <p style="text-align: center; margin-bottom: 40px;">Track, return, or buy again.</p>
+        <h1 style="margin-bottom: 5px;">Your Orders.</h1>
+        <p style="text-align: center; margin-bottom: 30px; color: var(--text-secondary);">Track, return, or buy again.
+        </p>
+
+        <!-- Search Bar -->
+        <div class="search-container" style="margin-bottom: 25px;">
+            <input type="text" id="order-search" class="search-input"
+                placeholder="Search orders by product name, ID, or status..." autocomplete="off">
+            <svg class="search-icon" viewBox="0 0 24 24">
+                <path
+                    d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+            </svg>
+        </div>
+
+        <!-- Filter Sections -->
+        <div style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px;">
+            <div id="category-bar" class="category-bar" style="margin-bottom: 0;">
+                <!-- Categories will be injected here -->
+            </div>
+            <div id="status-bar" class="category-bar" style="margin-bottom: 0;">
+                <!-- Status chips will be injected here -->
+            </div>
+        </div>
 
         <table>
             <thead>
                 <tr>
-                    <th
-                        style="text-align: left; padding: 15px 0; color: var(--text-secondary); font-weight: normal; font-size: 12px;">
-                        DATE PLACED</th>
-                    <th
-                        style="text-align: left; padding: 15px 0; color: var(--text-secondary); font-weight: normal; font-size: 12px;">
-                        ORDER ID</th>
-                    <th
-                        style="text-align: left; padding: 15px 0; color: var(--text-secondary); font-weight: normal; font-size: 12px;">
-                        PRODUCT</th>
-                    <th
-                        style="text-align: left; padding: 15px 0; color: var(--text-secondary); font-weight: normal; font-size: 12px;">
-                        STATUS</th>
-                    <th></th>
+                    <th>DATE PLACED</th>
+                    <th>ORDER ID</th>
+                    <th>PRODUCT</th>
+                    <th>STATUS</th>
+                    <th style="text-align: right;">ACTION</th>
                 </tr>
             </thead>
             <tbody id="order-list"></tbody>
@@ -115,72 +140,139 @@
     <script>
         if (!requireLogin()) throw new Error("Redirecting");
 
+        let allOrders = [];
+        let selectedCategory = 'All';
+        let selectedStatus = 'All';
+
         async function loadOrders() {
             const orders = await Api.get('/orders');
             if (!orders) return;
 
+            // Time-wise sorting: Most recent first
+            allOrders = orders.sort((a, b) => new Date(b.orderDate) - new Date(a.orderDate));
+
+            renderFilters();
+            filterOrders();
+        }
+
+        function renderFilters() {
+            // Category Bar
+            const categories = ['All', ...new Set(allOrders.map(o => o.product.category))];
+            const catBar = document.getElementById('category-bar');
+            if (catBar) {
+                catBar.innerHTML = categories.map(cat => `
+                    <div class="category-chip ${selectedCategory === cat ? 'active' : ''}" onclick="selectCategory('${cat}')">
+                        ${cat}
+                    </div>
+                `).join('');
+            }
+
+            // Status Bar
+            const statuses = ['All', 'Confirmed', 'Pending', 'Rejected'];
+            const statusBar = document.getElementById('status-bar');
+            if (statusBar) {
+                statusBar.innerHTML = statuses.map(status => `
+                    <div class="category-chip ${selectedStatus === status ? 'active' : ''}" onclick="selectStatus('${status}')">
+                        ${status}
+                    </div>
+                `).join('');
+            }
+        }
+
+        function selectCategory(cat) {
+            selectedCategory = cat;
+            renderFilters();
+            filterOrders();
+        }
+
+        function selectStatus(status) {
+            selectedStatus = status;
+            renderFilters();
+            filterOrders();
+        }
+
+        function filterOrders() {
+            const query = document.getElementById('order-search').value.toLowerCase();
             const container = document.getElementById('order-list');
-            if (orders.length === 0) {
-                container.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 40px;">You have no orders yet.</td></tr>';
+
+            const filtered = allOrders.filter(o => {
+                const productName = o.product.name.toLowerCase();
+                const paymentIdStr = (o.paymentId || '').toLowerCase();
+
+                // Determine order's logical status to match filter UI and display badges
+                const isConfirmed = o.verified || o.status === 'Confirmed';
+                const isRejected = o.status === 'Rejected';
+                const logicalStatus = isConfirmed ? 'Confirmed' : (isRejected ? 'Rejected' : 'Pending');
+
+                const matchesSearch = productName.includes(query) || paymentIdStr.includes(query) || logicalStatus.toLowerCase().includes(query);
+                const matchesCategory = selectedCategory === 'All' || o.product.category === selectedCategory;
+                const matchesStatus = selectedStatus === 'All' || logicalStatus === selectedStatus;
+
+                return matchesSearch && matchesCategory && matchesStatus;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 60px 20px;">
+                    <h3 style="color: var(--text-secondary); opacity: 0.6;">No orders match your filters.</h3>
+                    <p style="margin-top: 10px;">Try adjusting your search or filters.</p>
+                </td></tr>`;
                 return;
             }
-            container.innerHTML = orders.map(o => `
-                <tr style="border-bottom: 1px solid var(--border-color);">
-                    <td style="padding: 20px 0; color: var(--text-secondary);">${new Date(o.orderDate).toLocaleDateString()}</td>
-                    <td style="padding: 20px 0; font-family: monospace; font-size: 14px;">${o.paymentId.substring(0, 8)}...</td>
-                    <td style="padding: 20px 0;">
-                        <span style="font-weight: 500; font-size: 16px;">${o.product.name}</span>
-                        <div style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">ID: #${o.product.id}</div>
-                    </td>
-                    <td style="padding: 20px 0;">
-                        <span style="display:inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; border: 1px solid ${o.status === 'Rejected' ? 'red' : (o.verified || o.status === 'Confirmed' ? 'var(--accent-color)' : 'var(--border-color)')}; color: ${o.status === 'Rejected' ? 'red' : (o.verified || o.status === 'Confirmed' ? 'var(--accent-color)' : 'var(--text-secondary)')};">
-                            ${o.status.toUpperCase()}
-                        </span>
-                        ${o.status === 'Rejected' && o.rejectionReason ? `<div style="font-size: 11px; color: red; margin-top: 5px;">Reason: ${o.rejectionReason}</div>` : ''}
-                    </td>
-                    <td style="padding: 20px 0; text-align: right;">
-                        ${o.verified || o.status === 'Confirmed'
-                    ? `<button onclick="accessProject(${o.id}, '${o.product.name.replace(/'/g, "\\'")}')" class="secondary" style="font-size: 13px;">View Purchase Details</button>`
-                    : (o.status === 'Rejected' ? `<span style="font-size: 12px; color: red;">Contact Support</span>` : `<span style="font-size: 12px; color: var(--text-secondary);">Verifying payment...</span>`)}
-                    </td>
-                </tr>
-            `).join('');
+
+            container.innerHTML = filtered.map(o => {
+                const isConfirmed = o.verified || o.status === 'Confirmed';
+                const isRejected = o.status === 'Rejected';
+                const statusClass = isConfirmed ? 'status-confirmed' : (isRejected ? 'status-rejected' : 'status-pending');
+                const displayId = (o.paymentId || 'UNKNOWN').substring(0, 8);
+
+                return `
+                    <tr>
+                        <td data-label="Date" class="order-date-td">${new Date(o.orderDate).toLocaleDateString()}</td>
+                        <td data-label="Order ID" class="order-id-td">#${displayId}</td>
+                        <td data-label="Product" class="order-product-td">
+                            <div class="product-name">${o.product.name}</div>
+                            <div class="project-id-meta">PROJECT ID: #${o.product.id}</div>
+                        </td>
+                        <td data-label="Status" class="order-status-td">
+                            <span class="status-badge ${statusClass}">
+                                ${isConfirmed ? 'CONFIRMED' : (isRejected ? 'REJECTED' : 'PENDING')}
+                            </span>
+                            ${isRejected && o.rejectionReason ? `<div class="rejection-reason">Reason: ${o.rejectionReason}</div>` : ''}
+                        </td>
+                        <td data-label="Action" class="order-action-td">
+                            ${isConfirmed
+                        ? `<button onclick="accessProject(${o.id}, '${o.product.name.replace(/'/g, "\\'")}')" class="secondary view-details-btn">View Purchase Details</button>`
+                        : (isRejected
+                            ? `<span class="contact-support-link">Contact Support</span>`
+                            : `<div class="verifying-status">
+                                 <span class="pulse-dot"></span>
+                                 Verifying payment...
+                               </div>`)}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
+
+        // Search Input Listener
+        document.getElementById('order-search')?.addEventListener('input', filterOrders);
 
         async function accessProject(orderId, productName) {
             try {
                 const res = await Api.get(`/orders/${orderId}/access`);
 
-                const modal = document.createElement('div');
-                modal.id = 'content-modal';
-                modal.style.cssText = `
-                    position: fixed; inset: 0;
-                    background: rgba(0,0,0,0); 
-                    z-index: 2000;
-                    display: flex; align-items: flex-end; justify-content: center;
-                    transition: background 0.4s cubic-bezier(0.32, 0, 0.67, 0), backdrop-filter 0.4s;
-                    backdrop-filter: blur(0px);
-                `;
-
-                // iOS-style sheet
-                const sheetStyle = `
-                    background: var(--bg-color); 
-                    width: 100%; max-width: 700px; 
-                    padding: 40px; 
-                    border-radius: 20px 20px 0 0; 
-                    position: relative; 
-                    max-height: 85vh; 
-                    overflow-y: auto; 
-                    border-top: 1px solid var(--border-color);
-                    box-shadow: 0 -10px 40px rgba(0,0,0,0.3);
-                    transform: translateY(100%);
-                    transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
-                `;
+                let modal = document.getElementById('content-modal');
+                if (!modal) {
+                    modal = document.createElement('div');
+                    modal.id = 'content-modal';
+                    modal.className = 'sheet-overlay';
+                    document.body.appendChild(modal);
+                }
 
                 modal.innerHTML = `
-                    <div id="modal-sheet" style="${sheetStyle}">
-                        <div style="width: 40px; height: 5px; background: var(--text-secondary); border-radius: 3px; margin: -20px auto 30px; opacity: 0.2;"></div>
-                        <button onclick="closeModal()" style="position: absolute; top: 25px; right: 25px; background: rgba(128,128,128,0.1); width: 30px; height: 30px; border-radius: 50%; color: var(--text-color); font-size: 18px; border: none; cursor: pointer; display:flex; align-items:center; justify-content:center;">×</button>
+                    <div id="modal-sheet" class="bottom-sheet">
+                        <div class="sheet-handle"></div>
+                        <button class="sheet-close-btn" onclick="closeModal()">×</button>
                         
                         <h2 style="margin-top: 0; margin-bottom: 5px; font-size: 24px;">${productName}</h2>
                         <p style="color: var(--accent-color); font-size: 13px; margin-top: 0; margin-bottom: 30px;">Authenticated & Verified • ${new Date().toLocaleDateString()}</p>
@@ -189,7 +281,7 @@
                             <h4 style="margin: 0 0 12px 0; color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Git Repository</h4>
                             <div style="display: flex; gap: 10px; align-items: center;">
                                 <code style="flex: 1; padding: 12px 15px; background: rgba(0,0,0,0.3); color: var(--text-color); border-radius: 10px; font-family: monospace; border: 1px solid var(--border-color); font-size: 13px;">${res.gitRepoUrl || 'No URL provided'}</code>
-                                <button onclick="window.open('${res.gitRepoUrl}', '_blank')" style="border-radius: 10px; padding: 0 20px;">Open</button>
+                                <button onclick="window.open('${res.gitRepoUrl}', '_blank')" style="border-radius: 10px; padding: 0 20px; width: auto;">Open</button>
                             </div>
                         </div>
 
@@ -201,22 +293,21 @@
                         </div>
                     </div>
                 `;
-                document.body.appendChild(modal);
 
-                // Trigger animation
+                modal.style.display = 'flex';
+                // Trigger animation with double rAF
                 requestAnimationFrame(() => {
-                    modal.style.background = 'rgba(0,0,0,0.6)';
-                    modal.style.backdropFilter = 'blur(8px)';
-                    document.getElementById('modal-sheet').style.transform = 'translateY(0)';
+                    requestAnimationFrame(() => {
+                        modal.classList.add('active');
+                    });
                 });
 
                 // Close function
                 window.closeModal = function () {
-                    modal.style.background = 'rgba(0,0,0,0)';
-                    modal.style.backdropFilter = 'blur(0px)';
-                    const sheet = document.getElementById('modal-sheet');
-                    if (sheet) sheet.style.transform = 'translateY(100%)';
-                    setTimeout(() => modal.remove(), 400);
+                    modal.classList.remove('active');
+                    setTimeout(() => {
+                        modal.style.display = 'none';
+                    }, 400);
                 }
 
                 // Close on click outside

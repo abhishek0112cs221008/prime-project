@@ -6,146 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Profile - Prime Project</title>
     <link rel="stylesheet" href="css/style.css">
-    <style>
-        .profile-container {
-            max-width: 800px;
-            margin: 40px auto;
-            background: var(--card-bg);
-            padding: 30px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--text-secondary);
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            background: var(--bg-color);
-            border: 1px solid var(--border-color);
-            color: var(--text-color);
-            border-radius: 8px;
-        }
-
-        .tag-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .tag {
-            background: var(--accent-color);
-            color: white;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .tag span {
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .interest-suggestions {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-            flex-wrap: wrap;
-        }
-
-        .suggestion-chip {
-            background: var(--bg-color);
-            border: 1px solid var(--border-color);
-            padding: 5px 12px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 13px;
-        }
-
-        .suggestion-chip:hover {
-            border-color: var(--accent-color);
-        }
-
-        .message-success {
-            color: #28a745;
-            margin-top: 10px;
-            display: none;
-        }
-
-        /* Order History Styles */
-        .order-card {
-            background: var(--bg-color);
-            border: 1px solid var(--border-color);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .order-info h4 {
-            margin: 0 0 5px 0;
-        }
-
-        .order-info p {
-            margin: 0;
-            color: var(--text-secondary);
-            font-size: 14px;
-        }
-
-        .status-badge {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            text-transform: uppercase;
-            font-weight: bold;
-        }
-
-        .status-verified {
-            background: rgba(40, 167, 69, 0.2);
-            color: #28a745;
-        }
-
-        .status-pending {
-            background: rgba(255, 193, 7, 0.2);
-            color: #ffc107;
-        }
-
-        .tabs {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 30px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
-        }
-
-        .tab-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 16px;
-            cursor: pointer;
-            padding: 5px 10px;
-        }
-
-        .tab-btn.active {
-            color: var(--accent-color);
-            border-bottom: 2px solid var(--accent-color);
-        }
-    </style>
 </head>
 
 <body>
@@ -189,47 +49,71 @@
             </a>
             <span id="auth-links"></span>
         </div>
+        <div class="flip-clock">
+            <div class="flip-unit" id="hr1">0</div>
+            <div class="flip-unit" id="hr2">0</div>
+            <span class="clock-sep">:</span>
+            <div class="flip-unit" id="min1">0</div>
+            <div class="flip-unit" id="min2">0</div>
+            <span class="clock-sep">:</span>
+            <div class="flip-unit" id="sec1">0</div>
+            <div class="flip-unit" id="sec2">0</div>
+            <span class="clock-ampm" id="ampm">AM</span>
+        </div>
         <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">◐</button>
     </nav>
+    <script src="js/watch.js"></script>
 
-    <div class="container">
+    <div class="container" style="max-width: 800px; padding-top: 20px;">
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('details')">Profile Details</button>
-            <button class="tab-btn" onclick="switchTab('history')">Order History</button>
+            <div class="tab-btn active" onclick="switchTab('details')">Profile Details</div>
+            <div class="tab-btn" onclick="switchTab('history')">Order History</div>
         </div>
 
         <!-- Profile Details Section -->
         <div id="tab-details" class="profile-container">
-            <h2 style="margin-top: 0;">My Profile</h2>
-            <div class="form-group">
-                <label>Full Name</label>
-                <input type="text" id="p-name" placeholder="Your Name">
-            </div>
-            <div class="form-group">
-                <label>Email Address</label>
-                <input type="email" id="p-email" disabled style="opacity: 0.7; cursor: not-allowed;">
+            <div class="profile-header">
+                <div class="profile-avatar" id="avatar-initials">U</div>
+                <div class="profile-title-group">
+                    <h2 id="display-name">User Name</h2>
+                    <p id="display-email">user@example.com</p>
+                </div>
             </div>
 
             <div class="form-group">
-                <label>Your Interests (for recommendations)</label>
+                <label>Full Name</label>
+                <input type="text" id="p-name" placeholder="Your Name"
+                    oninput="document.getElementById('display-name').innerText = this.value || 'User Name'">
+            </div>
+
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="p-email" disabled style="opacity: 0.6; cursor: not-allowed;">
+            </div>
+
+            <div class="form-group">
+                <label>Your Interests</label>
                 <div style="display: flex; gap: 10px;">
-                    <input type="text" id="interest-input"
-                        placeholder="Type interest (e.g. Java, Web Dev) and press Enter">
-                    <button onclick="addInterest()" style="width: auto;">Add</button>
+                    <input type="text" id="interest-input" placeholder="Type (e.g. Java, React) and press Enter">
+                    <button onclick="addInterest()" style="width: auto; padding: 0 20px;">Add</button>
                 </div>
                 <div class="interest-suggestions">
                     <span class="suggestion-chip" onclick="addSuggestion('Java')">+ Java</span>
-                    <span class="suggestion-chip" onclick="addSuggestion('Web Development')">+ Web Development</span>
+                    <span class="suggestion-chip" onclick="addSuggestion('Web Development')">+ Web Dev</span>
                     <span class="suggestion-chip" onclick="addSuggestion('Python')">+ Python</span>
-                    <span class="suggestion-chip" onclick="addSuggestion('Spring Boot')">+ Spring Boot</span>
                     <span class="suggestion-chip" onclick="addSuggestion('React')">+ React</span>
-                    <span class="suggestion-chip" onclick="addSuggestion('Machine Learning')">+ Machine Learning</span>
+                    <span class="suggestion-chip" onclick="addSuggestion('ML')">+ ML</span>
                 </div>
                 <div id="interests-list" class="tag-container"></div>
             </div>
 
-            <button onclick="saveProfile()" style="width: 100%; margin-top: 20px;">Save Changes</button>
-            <p id="success-msg" class="message-success">Profile updated successfully!</p>
+            <button onclick="saveProfile()" style="width: 100%; margin-top: 10px;">Save Changes</button>
+            <p id="success-msg" class="message-success" style="text-align: center; margin-top: 15px;">Profile updated
+                successfully!</p>
+
+            <div class="logout-section">
+                <button onclick="logout(event)" class="btn-logout">Sign Out from Account</button>
+            </div>
         </div>
 
         <!-- Order History Section -->
@@ -292,17 +176,27 @@
         // Initialize
         (async function init() {
             if (user) {
+                // Populate default from localstorage immediately
+                document.getElementById('p-name').value = user.name || '';
+                document.getElementById('display-name').innerText = user.name || 'User Name';
+                document.getElementById('p-email').value = user.email || '';
+                document.getElementById('display-email').innerText = user.email || '';
+                document.getElementById('avatar-initials').innerText = (user.name || 'U').charAt(0).toUpperCase();
+
                 // Fetch fresh user data including interests
                 try {
                     const freshUser = await Api.get('/auth/me');
                     if (freshUser) {
                         document.getElementById('p-name').value = freshUser.name;
+                        document.getElementById('display-name').innerText = freshUser.name;
                         document.getElementById('p-email').value = freshUser.email;
+                        document.getElementById('display-email').innerText = freshUser.email;
+                        document.getElementById('avatar-initials').innerText = (freshUser.name || 'U').charAt(0).toUpperCase();
+
                         if (freshUser.interests && freshUser.interests.length > 0) {
                             myInterests = freshUser.interests.split(',').map(s => s.trim()).filter(s => s);
                             renderInterests();
                         }
-                        // Update local storage user if needed, or just rely on API for profile page
                     }
                 } catch (e) {
                     console.error("Failed to fetch user profile", e);

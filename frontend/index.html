@@ -20,7 +20,7 @@
                 </svg>
                 Dashboard
             </a>
-            <a href="index.html" style="color: var(--accent-color)">
+            <a href="index.html" class="active">
                 <svg viewBox="0 0 24 24">
                     <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
                 </svg>
@@ -49,13 +49,35 @@
             </a>
             <span id="auth-links"></span>
         </div>
+        <div class="flip-clock">
+            <div class="flip-unit" id="hr1">0</div>
+            <div class="flip-unit" id="hr2">0</div>
+            <span class="clock-sep">:</span>
+            <div class="flip-unit" id="min1">0</div>
+            <div class="flip-unit" id="min2">0</div>
+            <span class="clock-sep">:</span>
+            <div class="flip-unit" id="sec1">0</div>
+            <div class="flip-unit" id="sec2">0</div>
+            <span class="clock-ampm" id="ampm">AM</span>
+        </div>
         <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">◐</button>
     </nav>
+    <script src="js/watch.js"></script>
 
     <div class="container">
         <div style="text-align: center; margin-bottom: 40px;">
             <h1 style="font-size: 56px; margin-bottom: 10px;">The Project Hub.</h1>
             <p style="font-size: 24px; color: var(--text-secondary);">The best way to find the projects you need.</p>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-container">
+            <input type="text" id="project-search" class="search-input"
+                placeholder="Search for projects, tech, or categories..." autocomplete="off">
+            <svg class="search-icon" viewBox="0 0 24 24">
+                <path
+                    d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+            </svg>
         </div>
 
         <!-- Category Bar -->
@@ -221,13 +243,63 @@
             try {
                 const products = await Api.get('/products');
                 if (!products) return;
-
-                const container = document.getElementById('product-list');
-                container.innerHTML = products.map(renderProductCard).join('');
+                allProducts = products;
+                renderCategories();
+                filterProducts();
             } catch (e) {
                 console.error("Failed to load products", e);
             }
         }
+
+        let selectedCategory = 'All';
+
+        function renderCategories() {
+            const categories = ['All', ...new Set(allProducts.map(p => p.category))];
+            const bar = document.getElementById('category-bar');
+            if (!bar) return;
+
+            bar.innerHTML = categories.map(cat => `
+                <div class="category-chip ${selectedCategory === cat ? 'active' : ''}" onclick="selectCategory('${cat}')">
+                    ${cat}
+                </div>
+            `).join('');
+        }
+
+        function selectCategory(cat) {
+            selectedCategory = cat;
+            renderCategories();
+            filterProducts();
+        }
+
+        function filterProducts() {
+            const query = document.getElementById('project-search').value.toLowerCase();
+            const container = document.getElementById('product-list');
+
+            const filtered = allProducts.filter(p => {
+                const matchesSearch = p.name.toLowerCase().includes(query) ||
+                    p.category.toLowerCase().includes(query) ||
+                    p.description.toLowerCase().includes(query);
+
+                const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
+
+                return matchesSearch && matchesCategory;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px;">
+                        <h3 style="color: var(--text-secondary); opacity: 0.6;">No projects match your search.</h3>
+                        <p style="margin-top: 10px;">Try searching for something else or browse categories.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(renderProductCard).join('');
+        }
+
+        // Search Input Listener
+        document.getElementById('project-search')?.addEventListener('input', filterProducts);
 
         async function loadRecommendations() {
             if (!requireLogin(false)) return; // Don't redirect, just check
@@ -242,21 +314,41 @@
             }
         }
 
+        async function loadProductRating(productId, elementId) {
+            try {
+                const reviews = await Api.get(`/reviews/${productId}`);
+                if (reviews && reviews.length > 0) {
+                    const avg = reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length;
+                    const el = document.getElementById(elementId);
+                    if (el) {
+                        el.innerHTML = `${avg.toFixed(1)} <span class="rating-star">★</span> <span class="rating-count">${reviews.length}</span>`;
+                        el.style.display = 'flex';
+                    }
+                }
+            } catch (e) { }
+        }
+
         function renderProductCard(p) {
+            const ratingId = `rating-${p.id}-${Math.floor(Math.random() * 1000000)}`;
+            setTimeout(() => loadProductRating(p.id, ratingId), 100);
+
             return `
                 <div class="product-card">
+                    <div id="${ratingId}" class="rating-badge" style="display: none;"></div>
                     <img src="${p.imageUrl}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
-                    <h3>${p.name}</h3>
-                    <p style="font-size: 14px; margin-bottom: 5px;">${p.category}</p>
-                    <p style="color: var(--text-color); margin-top: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${p.description}</p>
-                    <div style="margin-top: auto; width: 100%;">
-                        <p><strong>₹${p.price.toLocaleString('en-IN')}</strong></p>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="secondary" onclick='openDetails(${JSON.stringify(p).replace(/'/g, "&#39;")})'>View Details</button>
-                            ${user && user.role === 'admin'
-                    ? `<button onclick='editProduct(${JSON.stringify(p).replace(/'/g, "&#39;")})' style="padding: 0 10px;">Edit</button>
-                       <button class="danger" onclick="deleteProduct(${p.id})">Remove</button>`
-                    : `<button onclick="addToCart(${p.id})">Buy Now</button>`}
+                    <div class="product-info">
+                        <h3>${p.name}</h3>
+                        <p class="category">${p.category}</p>
+                        <p class="description">${p.description}</p>
+                        <div style="margin-top: auto;">
+                            <p class="price">₹${p.price.toLocaleString('en-IN')}</p>
+                            <div style="display: flex; gap: 8px; margin-top: 10px;">
+                                <button class="secondary" style="padding: 8px 12px; font-size: 13px; width: auto;" onclick='openDetails(${JSON.stringify(p).replace(/'/g, "&#39;")})'>View Details</button>
+                                ${user && user.role === 'admin'
+                    ? `<button onclick='editProduct(${JSON.stringify(p).replace(/'/g, "&#39;")})' style="padding: 8px 12px; font-size: 13px; width: auto;">Edit</button>`
+                    : `<button style="padding: 8px 12px; font-size: 13px; background: var(--accent-color);" onclick="addToCart(${p.id})">Buy Now</button>`
+                }
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -321,21 +413,19 @@
         }
 
         function openDetails(p) {
-            const modal = document.createElement('div');
-            modal.id = 'details-modal';
-            modal.style.cssText = `
-                position: fixed; inset: 0; background: rgba(0,0,0,0); z-index: 1000; 
-                display: flex; align-items: flex-end; justify-content: center;
-                transition: background 0.3s ease;
-            `;
+            let modal = document.getElementById('details-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'details-modal';
+                modal.className = 'sheet-overlay';
+                document.body.appendChild(modal);
+            }
 
             // Inner content
             modal.innerHTML = `
-                <div id="details-sheet" style="background: var(--card-bg); width: 100%; max-width: 920px; padding: 30px; border-radius: 24px 24px 0 0; position: relative; height: 90vh; max-height: 90vh; overflow-y: auto; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); box-shadow: 0 -10px 40px rgba(0,0,0,0.3); border-top: 1px solid var(--border-color);">
-                    
-                    <div style="width: 40px; height: 5px; background: var(--text-secondary); border-radius: 3px; margin: -10px auto 20px; opacity: 0.4;"></div>
-
-                    <button onclick="closeDetails()" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border: none; color: var(--text-color); font-size: 18px;">×</button>
+                <div id="details-sheet" class="bottom-sheet" style="max-width: 920px; height: 90vh;">
+                    <div class="sheet-handle"></div>
+                    <button class="sheet-close-btn" onclick="closeDetails()">×</button>
                     
                     <div style="display:flex; gap:20px; align-items:flex-start;">
                         <img src="${p.imageUrl}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
@@ -374,13 +464,13 @@
                 </div>
             `;
 
-            document.body.appendChild(modal);
-
-            // Animate in
-            setTimeout(() => {
-                modal.style.background = 'rgba(0,0,0,0.6)';
-                document.getElementById('details-sheet').style.transform = 'translateY(0)';
-            }, 50);
+            modal.style.display = 'flex';
+            // Use double rAF to guarantee transition triggers
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    modal.classList.add('active');
+                });
+            });
 
             loadReviews(p.id);
 
@@ -392,11 +482,11 @@
 
         function closeDetails() {
             const modal = document.getElementById('details-modal');
-            const sheet = document.getElementById('details-sheet');
-            if (modal && sheet) {
-                modal.style.background = 'rgba(0,0,0,0)';
-                sheet.style.transform = 'translateY(100%)';
-                setTimeout(() => modal.remove(), 350);
+            if (modal) {
+                modal.classList.remove('active');
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                }, 400);
             }
         }
 

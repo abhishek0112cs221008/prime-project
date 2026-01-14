@@ -36,32 +36,71 @@
             </a>
             <span id="auth-links"></span>
         </div>
+        <div class="flip-clock">
+            <div class="flip-unit" id="hr1">0</div>
+            <div class="flip-unit" id="hr2">0</div>
+            <span class="clock-sep">:</span>
+            <div class="flip-unit" id="min1">0</div>
+            <div class="flip-unit" id="min2">0</div>
+            <span class="clock-sep">:</span>
+            <div class="flip-unit" id="sec1">0</div>
+            <div class="flip-unit" id="sec2">0</div>
+            <span class="clock-ampm" id="ampm">AM</span>
+        </div>
         <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">◐</button>
     </nav>
+    <script src="js/watch.js"></script>
 
-    <div class="container">
+    <div class="container" style="padding-bottom: 120px;">
         <h1>Review your cart.</h1>
-        <p style="text-align: center; margin-bottom: 40px;">Instant access to downloaded files.</p>
+        <p style="text-align: center; margin-bottom: 40px; color: var(--text-secondary);">Your projects are just one
+            step away.</p>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Product</th>
-                    <th>Price</th>
-                    <!-- <th>Quantity</th> Removed -->
-                    <th>Subtotal</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody id="cart-list"></tbody>
-        </table>
-
-        <div style="margin-top: 40px; text-align: right; border-top: 1px solid var(--border-color); padding-top: 20px;">
-            <div style="font-size: 24px; font-weight: 600; margin-bottom: 20px;">
-                Total: <span id="cart-total">₹0</span>
+        <div id="cart-content-view">
+            <div class="cart-list-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Price</th>
+                            <th>Subtotal</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="cart-list"></tbody>
+                </table>
             </div>
-            <button id="checkout-btn" onclick="checkout()" style="width: 200px;">Check Out</button>
+
+            <div class="cart-summary-card" id="cart-summary-section">
+                <div style="font-size: 20px; font-weight: 600;">
+                    Cart Total: <span id="cart-total" style="color: var(--accent-color);">₹0</span>
+                </div>
+                <button id="checkout-btn" onclick="checkout()" style="width: 240px; padding: 16px;">Secure
+                    Checkout</button>
+            </div>
         </div>
+
+        <div id="empty-cart-state" style="display: none;">
+            <div class="empty-cart-view">
+                <div class="empty-cart-icon">🛒</div>
+                <h2>Your cart is empty</h2>
+                <p style="color: var(--text-secondary); margin: 10px 0 30px;">Looks like you haven't added any projects
+                    yet.</p>
+                <a href="index.html" class="nav-btn" style="display: inline-block; padding: 12px 30px;">Browse
+                    Projects</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Sticky Footer Summary -->
+    <div id="mobile-sticky-summary" class="cart-summary-sticky" style="display: none;">
+        <div>
+            <div style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">
+                Total Amount</div>
+            <div id="sticky-total" style="font-size: 20px; font-weight: 700; color: var(--text-color);">₹0</div>
+        </div>
+        <button onclick="checkout()"
+            style="width: auto; padding: 12px 24px; font-size: 14px; border-radius: 12px;">Checkout Now</button>
     </div>
 
     <footer>
@@ -124,19 +163,22 @@
                 const items = await Api.get('/cart');
                 const container = document.getElementById('cart-list');
                 const totalEl = document.getElementById('cart-total');
+                const stickyTotalEl = document.getElementById('sticky-total');
                 const checkoutBtn = document.getElementById('checkout-btn');
+                const contentView = document.getElementById('cart-content-view');
+                const emptyState = document.getElementById('empty-cart-state');
+                const mobileSticky = document.getElementById('mobile-sticky-summary');
 
                 if (!items || items.length === 0) {
-                    container.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 40px;">Your cart is empty. <a href="index.html">Browse Projects</a></td></tr>';
-                    totalEl.innerText = '₹0';
+                    contentView.style.display = 'none';
+                    emptyState.style.display = 'block';
+                    mobileSticky.style.display = 'none';
                     currentTotal = 0;
-                    if (checkoutBtn) {
-                        checkoutBtn.disabled = true;
-                        checkoutBtn.style.opacity = '0.5';
-                        checkoutBtn.style.cursor = 'not-allowed';
-                    }
                     return;
                 }
+
+                contentView.style.display = 'block';
+                emptyState.style.display = 'none';
 
                 let total = 0;
                 let html = '';
@@ -145,7 +187,6 @@
                     if (!item.product) return;
                     const p = item.product;
                     const price = p.price || 0;
-                    // Quantity ignored for display as per request
                     const quantity = item.quantity || 1;
                     const subtotal = price * quantity;
                     const img = p.imageUrl || 'https://via.placeholder.com/50?text=No+Img';
@@ -155,17 +196,19 @@
 
                     html += `
                         <tr>
-                            <td>
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                     <img src="${img}" style="width:50px; height:50px; object-fit:contain; border-radius:4px;">
-                                     <b>${name}</b>
+                            <td data-label="Product">
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                     <img src="${img}" style="width:60px; height:60px; object-fit:cover; border-radius:12px; border:1px solid var(--border-color);">
+                                     <div style="text-align: left;">
+                                        <b style="display: block; font-size: 15px;">${name}</b>
+                                        <span style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase;">Project ID: ${p.id}</span>
+                                     </div>
                                 </div>
                             </td>
-                            <td>₹${price.toLocaleString('en-IN')}</td>
-                            <!-- Quantity Column Removed -->
-                            <td>₹${subtotal.toLocaleString('en-IN')}</td>
+                            <td data-label="Price">₹${price.toLocaleString('en-IN')}</td>
+                            <td data-label="Subtotal" style="font-weight:700; color: var(--text-color);">₹${subtotal.toLocaleString('en-IN')}</td>
                             <td style="text-align:right;">
-                                <button class="danger" style="width: auto; padding: 8px 12px; font-size: 13px;" onclick="removeItem(${item.id})">Remove</button>
+                                <button class="danger" style="width: auto; padding: 8px 12px; font-size: 12px; opacity: 0.8;" onclick="removeItem(${item.id})">Remove</button>
                             </td>
                         </tr>
                     `;
@@ -173,18 +216,13 @@
 
                 container.innerHTML = html;
                 currentTotal = total;
-                totalEl.innerText = '₹' + total.toLocaleString('en-IN');
+                const formattedTotal = '₹' + total.toLocaleString('en-IN');
+                totalEl.innerText = formattedTotal;
+                if (stickyTotalEl) stickyTotalEl.innerText = formattedTotal;
 
-                if (checkoutBtn) {
-                    if (total === 0) {
-                        checkoutBtn.disabled = true;
-                        checkoutBtn.style.opacity = '0.5';
-                        checkoutBtn.style.cursor = 'not-allowed';
-                    } else {
-                        checkoutBtn.disabled = false;
-                        checkoutBtn.style.opacity = '1';
-                        checkoutBtn.style.cursor = 'pointer';
-                    }
+                // Toggle Mobile Sticky based on window size (optional, or just always show if > 0)
+                if (window.innerWidth <= 768) {
+                    mobileSticky.style.display = 'flex';
                 }
 
             } catch (err) {
@@ -192,6 +230,13 @@
                 document.getElementById('cart-list').innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 40px; color: red;">Failed to load cart. ${err.message}</td></tr>`;
             }
         }
+
+        window.addEventListener('resize', () => {
+            const mobileSticky = document.getElementById('mobile-sticky-summary');
+            if (mobileSticky && currentTotal > 0) {
+                mobileSticky.style.display = window.innerWidth <= 768 ? 'flex' : 'none';
+            }
+        });
 
         async function removeItem(id) {
             try {
@@ -202,8 +247,7 @@
 
         function checkout() {
             if (currentTotal <= 0) return;
-            const modal = document.getElementById('checkout-modal');
-            modal.style.display = 'flex';
+            const overlay = document.getElementById('checkout-modal');
 
             // Reset Discount
             appliedDiscount = 0;
@@ -211,21 +255,20 @@
             document.getElementById('final-amount').innerText = '₹' + currentTotal.toLocaleString('en-IN');
             document.getElementById('discount-msg').innerHTML = '';
 
+            overlay.style.display = 'flex';
+            // Use double rAF to guarantee transition triggers after display change
             requestAnimationFrame(() => {
-                modal.style.background = 'rgba(0,0,0,0.6)';
-                modal.style.backdropFilter = 'blur(8px)';
-                document.getElementById('checkout-sheet').style.transform = 'translateY(0)';
+                requestAnimationFrame(() => {
+                    overlay.classList.add('active');
+                });
             });
         }
 
         function closeCheckout() {
-            const modal = document.getElementById('checkout-modal');
-            modal.style.background = 'rgba(0,0,0,0)';
-            modal.style.backdropFilter = 'blur(0px)';
-            const sheet = document.getElementById('checkout-sheet');
-            if (sheet) sheet.style.transform = 'translateY(100%)';
+            const overlay = document.getElementById('checkout-modal');
+            overlay.classList.remove('active');
             setTimeout(() => {
-                modal.style.display = 'none';
+                overlay.style.display = 'none';
             }, 400);
         }
 
@@ -274,7 +317,6 @@
         }
 
         async function confirmCheckout() {
-            // const address = document.getElementById('shipping-address').value;
             const utr = document.getElementById('payment-utr').value;
             const code = document.getElementById('discount-code').value;
 
@@ -292,12 +334,31 @@
 
                 const res = await Api.post('/orders', body);
                 if (res) {
-                    alert('Order placed successfully! Payment ID: ' + res.paymentId);
-                    window.location.href = 'orders.html';
+                    closeCheckout();
+                    // Show success sheet instead of alert
+                    showSuccessSheet(res.paymentId);
                 }
             } catch (e) {
                 alert("Checkout failed: " + e.message);
             }
+        }
+
+        function showSuccessSheet(paymentId) {
+            const overlay = document.getElementById('success-modal');
+            const pIdEl = document.getElementById('success-payment-id');
+            if (pIdEl) pIdEl.innerText = paymentId;
+
+            overlay.style.display = 'flex';
+            // Force reflow and animate
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    overlay.classList.add('active');
+                });
+            });
+        }
+
+        function goToOrders() {
+            window.location.href = 'orders.html';
         }
 
         loadCart().catch(e => {
@@ -306,14 +367,10 @@
     </script>
 
     <!-- Checkout Modal -->
-    <div id="checkout-modal"
-        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0); z-index:1000; align-items:flex-end; justify-content:center; backdrop-filter: blur(0px); transition: background 0.4s cubic-bezier(0.32, 0, 0.67, 0), backdrop-filter 0.4s;">
-        <div id="checkout-sheet"
-            style="background:var(--card-bg); width:100%; max-width:500px; padding:30px; border-radius:20px 20px 0 0; position:relative; border-top: 1px solid var(--border-color); transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); box-shadow: 0 -10px 40px rgba(0,0,0,0.3);">
-
-            <div
-                style="width: 40px; height: 5px; background: var(--text-secondary); border-radius: 3px; margin: -10px auto 20px; opacity: 0.2;">
-            </div>
+    <div id="checkout-modal" class="sheet-overlay">
+        <div id="checkout-sheet" class="bottom-sheet">
+            <div class="sheet-handle"></div>
+            <button class="sheet-close-btn" onclick="closeCheckout()">×</button>
 
             <h2 style="margin-top:0; margin-bottom: 5px;">Secure Checkout</h2>
             <p style="margin-bottom:20px; font-size:14px; color:var(--text-secondary);">Total Payable: <strong
@@ -336,7 +393,6 @@
                 <div style="display: flex; gap: 10px;">
                     <input id="discount-code" placeholder="SAVE10" oninput="applyDiscount()"
                         style="flex: 1; padding:12px; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:10px;">
-                    <!-- <button onclick="applyDiscount()" class="secondary" style="padding: 0 15px;">Apply</button> -->
                 </div>
                 <div id="discount-msg" style="margin-top: 5px; min-height: 15px;"></div>
             </div>
@@ -347,6 +403,19 @@
                 <button onclick="confirmCheckout()" style="flex:2; border-radius:10px; padding: 12px;">Pay & Place
                     Order</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="sheet-overlay">
+        <div class="bottom-sheet" style="text-align: center; padding: 40px 30px;">
+            <div style="font-size: 60px; margin-bottom: 20px;">🎉</div>
+            <h2 style="margin-bottom: 10px;">Order Placed!</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 30px;">Your purchase was successful. Payment ID:
+                <br><strong id="success-payment-id" style="color: var(--text-color);"></strong>
+            </p>
+            <button onclick="goToOrders()" style="padding: 14px 40px; width: auto; border-radius: 12px;">View My
+                Orders</button>
         </div>
     </div>
 </body>

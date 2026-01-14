@@ -1,4 +1,4 @@
-:root {
+﻿:root {
     /* Light Mode Variables */
     --bg-color: #f5f5f7;
     --card-bg: #ffffff;
@@ -626,12 +626,12 @@ tr:hover td {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
     color: var(--text-color);
-    padding: 0;
-    width: 32px;
-    height: 32px;
+    padding: 8px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -644,125 +644,6 @@ tr:hover td {
     transform: rotate(30deg);
     border-color: var(--accent-color);
     color: var(--accent-color);
-}
-
-/* Flip Clock UI */
-.flip-clock {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    margin: 0 15px;
-    perspective: 1000px;
-}
-
-.flip-unit {
-    position: relative;
-    width: 28px;
-    height: 38px;
-    background: #222;
-    border-radius: 4px;
-    font-family: 'Inter', sans-serif;
-    font-weight: 700;
-    font-size: 22px;
-    color: #fff;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-}
-
-.flip-unit::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    width: 100%;
-    height: 1px;
-    background: rgba(0, 0, 0, 0.3);
-    z-index: 5;
-}
-
-.flip-card {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    text-align: center;
-    line-height: 38px;
-}
-
-.flip-card .top,
-.flip-card .bottom {
-    position: absolute;
-    left: 0;
-    width: 100%;
-    height: 50%;
-    overflow: hidden;
-    background: #222;
-    border-radius: 4px;
-}
-
-.flip-card .top {
-    top: 0;
-    line-height: 38px;
-    /* Show top half */
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.flip-card .bottom {
-    bottom: 0;
-    line-height: 0;
-    /* Show bottom half */
-}
-
-/* Specific flip animation class */
-.flip-animate .top {
-    animation: flipTop 0.6s ease-in forwards;
-}
-
-.flip-animate .bottom {
-    animation: flipBottom 0.6s ease-out forwards;
-}
-
-@keyframes flipTop {
-    0% {
-        transform: rotateX(0);
-    }
-
-    100% {
-        transform: rotateX(-90deg);
-    }
-}
-
-@keyframes flipBottom {
-    0% {
-        transform: rotateX(90deg);
-    }
-
-    100% {
-        transform: rotateX(0);
-    }
-}
-
-.clock-sep {
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--accent-color);
-    margin-top: -2px;
-}
-
-.clock-ampm {
-    font-size: 11px;
-    font-weight: 800;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    margin-left: 2px;
-    background: var(--card-bg);
-    padding: 2px 5px;
-    border-radius: 4px;
-    border: 1px solid var(--border-color);
-}
-
-@media (max-width: 900px) {
-    .flip-clock {
-        display: none;
-    }
 }
 
 /* Admin Panel */
@@ -1427,7 +1308,6 @@ footer {
         align-items: flex-start;
     }
 }
-
 /* Cart Page Enhancements */
 .cart-list-container {
     margin-bottom: 40px;
@@ -1481,7 +1361,7 @@ footer {
         justify-content: space-between;
         align-items: center;
         z-index: 1510;
-        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
     }
 }
 
@@ -1536,7 +1416,6 @@ footer {
         gap: 10px;
         margin: 10px 0 20px;
     }
-
     .tab-btn {
         font-size: 14px;
         padding: 10px 15px;
@@ -1574,11 +1453,11 @@ footer {
     .profile-title-group h2 {
         font-size: 26px !important;
     }
-
+    
     .form-group {
         margin-bottom: 20px !important;
     }
-
+    
     .form-group button {
         height: 50px;
         font-size: 14px;
@@ -1685,7 +1564,7 @@ footer {
 }
 
 .sheet-handle {
-    width: 32px;
+    width: 40px;
     height: 5px;
     background: var(--text-secondary);
     border-radius: 3px;
@@ -1715,3 +1594,5 @@ footer {
     transform: scale(1.1);
     background: rgba(128, 128, 128, 0.2);
 }
+
+
