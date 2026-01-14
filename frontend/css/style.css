@@ -185,6 +185,56 @@ a:hover {
     opacity: 1 !important;
 }
 
+/* New Logo Brand Styling */
+.nav-brand-logo {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    font-weight: 800;
+    font-size: 26px;
+    text-decoration: none !important;
+    font-style: italic;
+    color: #4a8d2c;
+    /* The green color from image */
+    letter-spacing: -2px;
+}
+
+.logo-pri {
+    color: #4a8d2c;
+}
+
+.logo-me {
+    background: linear-gradient(180deg, #ff9b21 0%, #ff7a00 100%);
+    color: white;
+    padding: 0px 5px;
+    border-radius: 2px;
+    margin: 0 0px;
+    box-shadow: 0 5px 6px rgba(255, 122, 0, 0.3);
+    position: relative;
+    display: inline-block;
+}
+
+.logo-project {
+    color: #4a8d2c;
+}
+
+/* Optional: subtle long shadow effect if needed */
+.nav-brand-logo {
+    position: relative;
+    /* transition: transform 0.2s; */
+}
+
+/* Adjust nav for larger logo if needed */
+.nav {
+    height: 64px;
+    /* Slightly taller for the new logo */
+}
+
+body {
+    padding-top: 72px;
+    /* Adjust body padding to match new nav height */
+}
+
 .nav-btn {
     background: var(--accent-color);
     color: white !important;
