@@ -5,20 +5,7 @@ function updateFlipUnit(id, value) {
     if (!el) return;
 
     if (previousTime[id] !== value) {
-        // Create the flip structure if it doesn't exist or replace for new value
-        el.innerHTML = `
-            <div class="flip-card flip-animate">
-                <div class="top">${value}</div>
-                <div class="bottom">${value}</div>
-            </div>
-        `;
-
-        // Remove animation class after completion
-        const card = el.querySelector('.flip-card');
-        card.addEventListener('animationend', () => {
-            card.classList.remove('flip-animate');
-        }, { once: true });
-
+        el.textContent = value;
         previousTime[id] = value;
     }
 }

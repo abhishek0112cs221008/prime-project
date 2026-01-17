@@ -1,5 +1,7 @@
 // const API_BASE = 'https://prime-project.onrender.com/api';
-const API_BASE = 'http://localhost:8080/api';
+const API_BASE = 'http://192.168.1.3:8080/api'
+
+// const API_BASE = 'http://localhost:8080/api';
 
 class Api {
     static async request(endpoint, method = 'GET', body = null) {

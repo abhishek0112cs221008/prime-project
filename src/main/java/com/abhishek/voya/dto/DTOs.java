@@ -78,4 +78,27 @@ public class DTOs {
         private String name;
         private String interests;
     }
+
+    @Data
+    public static class ForgotPasswordRequest {
+        @NotBlank
+        @Email
+        private String email;
+    }
+
+    @Data
+    public static class ResetPasswordRequest {
+        @NotBlank
+        private String token;
+        @NotBlank
+        private String newPassword;
+    }
+
+    @Data
+    public static class ChangePasswordRequest {
+        @NotBlank
+        private String oldPassword;
+        @NotBlank
+        private String newPassword;
+    }
 }

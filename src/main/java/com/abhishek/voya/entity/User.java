@@ -21,8 +21,10 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(nullable = false)
     private String password;
+
+    @Column(unique = true)
+    private String googleId;
 
     private String interests;
 
