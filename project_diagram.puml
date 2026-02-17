@@ -1,0 +1,97 @@
+@startuml
+!theme plain
+hide empty members
+
+class User {
+  -Integer id
+  -String name
+  -String email
+  -String password
+  -Role role
+  -String googleId
+  -String interests
+}
+
+class Product {
+  -Integer id
+  -String name
+  -String category
+  -BigDecimal price
+  -Integer quantity
+  -String imageUrl
+  -String description
+  -String gitRepoUrl
+  -String installationGuide
+  -Integer viewCount
+  -String discountCode
+  -BigDecimal discountPercentage
+}
+
+class Order {
+  -Integer id
+  -String userEmail
+  -String shippingAddress
+  -String utr
+  -boolean isVerified
+  -BigDecimal discount
+  -Integer quantity
+  -LocalDateTime orderDate
+  -String paymentId
+  -String status
+  -String rejectionReason
+}
+
+class CartItem {
+  -Integer id
+  -String userEmail
+  -Integer quantity
+  -LocalDateTime addedDate
+}
+
+class Review {
+  -Integer id
+  -Integer productId
+  -String userEmail
+  -Integer rating
+  -String comment
+  -LocalDateTime createdAt
+}
+
+class PasswordResetToken {
+  -Long id
+  -String token
+  -User user
+  -LocalDateTime expiryDate
+}
+
+' Controllers
+class AuthController
+class ProductController
+class OrderController
+class CartController
+class ReviewController
+
+' Services
+class AuthService
+class ProductService
+class OrderService
+class CartService
+class SessionService
+
+' Relationships
+User "1" -- "*" Order : places (via email)
+User "1" -- "*" CartItem : has (via email)
+User "1" -- "*" Review : writes (via email)
+User "1" -- "1" PasswordResetToken : has (via userId)
+
+Product "1" -- "*" Order : contains (via productId)
+Product "1" -- "*" CartItem : in (via productId)
+Product "1" -- "*" Review : has (via productId)
+
+AuthController ..> AuthService
+AuthController ..> SessionService
+ProductController ..> ProductService
+OrderController ..> OrderService
+CartController ..> CartService
+
+@enduml
